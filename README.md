@@ -35,7 +35,11 @@ for guide-design purposes, a different site. Framing conservation this way:
 
 The trade-off, stated plainly: this method cannot distinguish "the site is genuinely
 absent/variant in that isolate" from "that region of that assembly is unresolved (N)
-or truncated". See [Limitations](#limitations).
+or truncated". Stage 5 (`--robustness`) removes that limitation by locating the
+homologous region with k-mer anchors and reporting the two cases separately; the
+measured size of the effect is under
+[Robustness](#robustness-what-the-denominator-is-worth) and in
+[Limitations](#limitations).
 
 ### Scanning algorithm
 
@@ -135,8 +139,15 @@ python run_pipeline.py --taxid 10310 --reference NC_001798
 # a different gene set
 python run_pipeline.py --genes UL30,UL29,UL54
 
+# stage 5: robustness / denominator-sensitivity analysis (downloads ~80 MB once)
+python run_pipeline.py --robustness
+
+# ... parts A and B only, no further network access
+python run_pipeline.py --robustness --skip-gene-corpus
+
 # offline unit tests (no network)
 python tests/test_core.py
+python tests/test_robustness.py
 ```
 
 Each stage is also runnable on its own: `python src/fetch_genomes.py --help`, etc.
@@ -155,6 +166,7 @@ contacting NCBI, `--refresh` bypasses the download cache, `-v` enables debug log
 | 2 | `src/extract_guides.py` | `results/guides_candidates.tsv` |
 | 3 | `src/conservation.py` | `results/conservation.tsv` |
 | 4 | `src/report.py` | `results/guides_ranked.tsv`, `results/summary.json` |
+| 5 | `src/robustness.py` | `results/robustness_report.md` + supporting TSVs (opt-in, `--robustness`) |
 | — | `run_pipeline.py` | `results/run_log.json` |
 
 **1. Fetch.** Queries NCBI Nucleotide, sorts accessions before applying `--limit` (so
@@ -202,6 +214,33 @@ position kept in `ref_all_positions` and counted in `n_reference_copies`.
 
 **4. Report.** Joins, flags, ranks. Ranking is deterministic — identical inputs give
 byte-identical output.
+
+**5. Robustness (opt-in, `--robustness`).** Asks what the stage-3 denominator is
+actually worth. Three independent attacks on it, all deterministic:
+
+* **Redundancy.** A mash-style bottom-*s* MinHash sketch of canonical *k*-mers per
+  genome (pure Python + numpy; splitmix64 mixing, *not* Python's salted `hash()`, so
+  sketches are reproducible across processes), all-pairs Jaccard, an ANI-like
+  identity, single-linkage clustering, and conservation recomputed on one
+  representative per cluster. The cluster count is an effective sample size.
+* **Ambiguity.** A sweep over `--max-ambiguous-fraction`, plus an *N-tolerant* match
+  mode in which a site whose homologous region in a genome is unresolved is scored
+  UNKNOWN and dropped from that guide's denominator instead of counted as a mismatch.
+* **Denominator.** The same guides re-measured against every HSV-1 nucleotide record
+  in GenBank that is shorter than a genome, plus the near-full-length "partial
+  genome" records — 4,945 records in this run, cached under `data/raw/genes/`.
+
+Homology for the last two is established without an aligner, by exact *k*-mer anchors
+and greedy colinear chaining (the seed-and-chain half of BLAST/minimap2). **A record
+counts toward a guide only if one chain has an anchor entirely left of the guide
+footprint and another entirely right of it** — those two anchors bracket the
+homologous stretch exactly, with no padding constant. Everything between two anchors
+of one chain counts as covered *even where it is divergent*, so a guide is never
+dropped merely for sitting in a variable region; that bias would have manufactured a
+flattering answer. A non-matching pair is then ABSENT (bracket short and fully
+resolved — real variation), or UNKNOWN (bracket contains an `N`, or is implausibly
+wide, or the record does not reach both sides). Only PRESENT and ABSENT enter the
+corrected denominator.
 
 ---
 
@@ -268,6 +307,116 @@ filtering.
 
 ---
 
+## Robustness: what the denominator is worth
+
+Stage 5, run 2026-09-07. Full write-up with every table in
+`results/robustness_report.md`; the numbers below are the headline findings, and they
+include the ones that do not flatter the result.
+
+### A — effective sample size
+
+The 183 genomes behave like **132** independent ones at 99.9% estimated identity
+(24 multi-member clusters; the largest, 9 members, is the strain-17 family:
+`NC_001806`, `X14112`, `BK012101`, `JN555585`, three `MN1593xx` and two `OZ34xxxx`).
+Recomputing on one representative per cluster gives **857 perfectly conserved guides
+over 132 genomes**, versus 833 over 183.
+
+Note the sign. De-duplication *raises* the count, because a duplicate contributes no
+new sequence but can contribute new assembly noise. That is a caution about
+interpreting the number, not a licence to prefer it: pairwise identity across the set
+runs 98.1–100%, and single linkage at 99.5% would collapse 183 genomes to 20 and
+"raise" conservation to 1,948 guides. The threshold matters more than the result, so
+the whole sweep is reported rather than one chosen value.
+
+### B — how much of "not conserved" is "not sequenced"
+
+Ambiguity sweep (both columns must always be quoted together):
+
+| `--max-ambiguous-fraction` | genomes | perfectly conserved |
+|---|---|---|
+| none | 183 | 833 |
+| 0.01 | 169 | 892 |
+| 0.001 | 157 | 945 |
+| 0.0001 | 141 | 970 |
+| 0 | 83 | 1,294 |
+
+Of the 874,191 (guide, genome) pairs, 787,938 are PRESENT, 84,007 are ABSENT with the
+homologous region demonstrably present and fully resolved, and only 2,246 (0.26%) are
+genuinely UNKNOWN. Scoring those as UNKNOWN rather than MISMATCH moves perfect
+conservation from **833 to 931**; 98 guides are perfect only under that reading.
+
+So the honest statement is that assembly ambiguity accounts for a **~12% relative**
+change in the perfectly-conserved count, not for the bulk of the non-conservation.
+84,007 ABSENT calls are real sequence variation.
+
+### C — 183 complete genomes vs a per-gene corpus
+
+4,945 further HSV-1 records were downloaded (4,552 sub-genomic + 393 near-full-length
+"partial genome"), 4,313 of which anchor-map to the reference.
+
+**The most important finding is about the corpus, not the guides.** Only **1,021 of
+the 4,552** sub-genomic records touch any of the seven target genes at all — the rest
+are thymidine-kinase, glycoprotein-G and glycoprotein-B typing fragments from
+unrelated surveys. For six of the seven genes the denominator is therefore dominated
+by the 393 partial genomes, which are the *same kind of evidence* as the 183 complete
+genomes, separated from them only by a title convention. Only **UL30** has a real
+clinical-amplicon corpus (574 sub-genomic records), because UL30 is what gets
+sequenced for aciclovir-resistance genotyping.
+
+Fate of the 833 perfectly-conserved guides, by corpus tier:
+
+| tier | guides with >=10 records | of the 833: <0.99 | <0.95 | <0.70 | still 1.00 | Pearson r |
+|---|---|---|---|---|---|---|
+| whole corpus | 4,777 | 119 | 0 | 0 | 183 | 0.992 |
+| sub-genomic records only | 4,769 | 168 | **15** | 0 | 586 | 0.929 |
+| partial genomes only | 4,777 | 145 | 0 | 0 | 268 | 0.992 |
+| no coverage correction | 4,777 | 833 | 823 | 0 | 0 | 0.985 |
+
+**The answer to the headline question: 15 of 833 (1.8%).** On the only tier that is
+genuinely independent of the complete-genome set, 15 guides that look perfect at
+n=183 fall below 95%; none falls below 70%. They are 13 in UL19, 1 in UL29, 1 in
+UL52. Minimum over the perfect set is 0.889.
+
+**The largest single effect in the entire analysis is the coverage correction.**
+Without it — dividing by every record considered rather than by the records that
+actually span the site, which is how the competing paper describes its calculation —
+823 of the 833 fall below 95% and mean conservation drops from 0.90 to 0.82. That is
+almost entirely artefact: a 600 bp amplicon does not contain a guide 40 kb away.
+Which cuts against us as much as for us: it means published conservation percentages
+computed that way are probably *understated*, not that ours are better.
+
+Statistical power is the other caveat. Median sub-genomic records per guide is ~40
+outside UL30 (326) and UL5 (107). The exact binomial 95% lower bound on 30/30 is
+about 0.88, so "100% over the sub-genomic tier" is a much weaker claim for UL19 or
+RL2 than for UL30.
+
+### D — the published competitor guides, scored by our method
+
+The four SaCas9 guides of Amrani et al. 2024 (Table 1), scored with our own exact
+26-mer (20 nt spacer + NNGRRT PAM) presence test against our own corpora. This is not
+a quotation of their numbers; it is the same measurement applied to their sequences.
+
+| guide | complete genomes (n=183) | gene-level corpus |
+|---|---|---|
+| ICP0g1 | 0.984 | 0.937 |
+| ICP0g2 | 0.847 | 0.807 |
+| ICP27g1 | 0.978 | 0.973 |
+| ICP27g2 | 0.973 | 0.937 |
+
+### Verdict
+
+"Complete genomes are the better denominator" is **defensible but must be
+qualified**, and the qualification is not the one we expected. The 183-genome
+estimate is not meaningfully inflated by redundancy or ambiguity, and it survives a
+widened denominator with 1.8% attrition. But for six of seven target genes GenBank
+simply does not hold an independent per-gene corpus to test against, so for those
+genes "we validated against thousands of sequences" would be an overstatement — the
+extra sequences are mostly more whole genomes. The reportable claim is a
+two-denominator one: perfectly conserved over 183 complete genomes **and** >=95% over
+the gene-level corpus, with the per-guide denominator stated.
+
+---
+
 ## Limitations
 
 Read these before using any guide from this table.
@@ -280,29 +429,35 @@ Read these before using any guide from this table.
    search cannot honour the pure-Python constraint — that conflict is an explicit
    phase-2 decision, not an oversight.
 
-2. **Assembly ambiguity depresses conservation.** 100 of the 183 genomes contain at
-   least one non-ACGT base; 26 have more than 0.1%. A site overlapping an `N` cannot
-   match exactly and is scored absent, so some "not conserved" calls are assembly
-   artefacts rather than real sequence variation. Re-running with
+2. **Assembly ambiguity depresses conservation — now quantified.** 100 of the 183
+   genomes contain at least one non-ACGT base; 26 have more than 0.1%. A site
+   overlapping an `N` cannot match exactly and is scored absent, so some "not
+   conserved" calls are assembly artefacts. Re-running with
    `--max-ambiguous-fraction 0.001` drops 26 genomes and raises perfect conservation
-   from **833/183 genomes to 945/157 genomes** — a real effect worth reporting in the
-   methods. Per-genome `n_ambiguous` and `ambiguous_fraction` are in the manifest.
+   from **833/183 genomes to 945/157 genomes**. Stage 5 measures the effect directly
+   rather than by proxy: only **2,246 of 874,191** (guide, genome) pairs are actually
+   unresolvable, and N-tolerant scoring moves the count 833 -> 931. The remaining
+   84,007 non-matches are real variation. Per-genome `n_ambiguous` and
+   `ambiguous_fraction` are in the manifest.
 
-3. **The genome set is not 183 independent clinical isolates.** It mixes clinical
-   isolates with long-passaged laboratory strains, and strain 17 alone is deposited
-   four times (`NC_001806`, `X14112`, `BK012101`, `JN555585`) with near-identical
-   sequence. No two records are byte-identical, so nothing is silently de-duplicated,
-   but the effective sample size is smaller than 183 and conservation fractions are
-   correspondingly optimistic. A curated, de-duplicated subset is a sensible phase-2
-   refinement.
+3. **The genome set is not 183 independent clinical isolates — now quantified.** It
+   mixes clinical isolates with long-passaged laboratory strains, and the strain-17
+   family alone accounts for 9 records. Stage 5 puts the effective sample size at
+   **132** at 99.9% identity. No two records are byte-identical, so nothing is
+   silently de-duplicated. Contrary to the expectation recorded here originally,
+   de-duplication *raises* the perfectly-conserved count (833 -> 857) rather than
+   lowering it, so redundancy is not the source of optimism it was assumed to be.
+   The clustering threshold, however, dominates the answer (see the sweep), so the
+   effective-n figure should always be quoted with its threshold.
 
 4. **"Complete genome" is a title convention, not a guarantee.** The default query
-   trusts the submitter's title. A further ~393 HSV-1 records of 145–160 kb are
-   deposited as *"partial genome"* — these are mostly genuine near-full-length
-   clinical isolates whose terminal/internal repeats were not resolved. They are
-   excluded by default (that is what makes the "complete genomes" claim defensible)
-   and admitted by `--include-partial`, which roughly triples the dataset. Every
-   record's own label is preserved in the `completeness_label` manifest column.
+   trusts the submitter's title. A further **393** HSV-1 records of 145–160 kb are
+   deposited as *"partial genome"* — mostly genuine near-full-length clinical
+   isolates whose terminal/internal repeats were not resolved. They are excluded by
+   default and admitted by `--include-partial`. Stage 5 scores them explicitly as
+   their own tier: they change nothing (0 of 833 perfect guides fall below 95% on
+   them), which is itself the finding — they are the same kind of evidence as the
+   183, so admitting them widens the denominator without widening the evidence.
 
 5. **The reference defines the candidate space.** Guides are enumerated only from
    `NC_001806`. A site conserved across all other isolates but absent from strain 17
@@ -317,6 +472,22 @@ Read these before using any guide from this table.
    genome, editing efficiency, or the rate at which NHEJ repair generates
    cut-resistant escape variants — the last being the actual motivation for multiplex
    design.
+
+8. **The per-gene corpus is thinner than GenBank's record counts suggest.** Only
+   1,021 of 4,552 sub-genomic HSV-1 records cover any of the seven target genes, and
+   outside UL30 the median guide has ~40 independent records behind it. Statements of
+   the form "conserved across thousands of sequences" are not supportable for six of
+   the seven genes; see the stage-5 report for the per-gene denominators.
+
+9. **Coverage determination is anchor-based, not alignment-based.** A record is
+   admitted to a guide's denominator only when exact 25-mer anchors bracket the guide
+   footprint within one colinear chain. This is deliberately conservative and is
+   validated by `tests/test_robustness.py` on synthetic truncations, SNPs, N blocks
+   and repeat duplications, but it is a heuristic: a record whose homologous region is
+   real yet too divergent to anchor on either side is scored UNKNOWN rather than
+   ABSENT, which biases the corrected conservation slightly upward. The
+   `no coverage correction` tier in the stage-5 report brackets the effect from the
+   other side.
 
 ---
 
@@ -335,10 +506,21 @@ Read these before using any guide from this table.
   a warning and the manifest contains exactly what was actually retrieved. Nothing is
   padded, imputed or invented.
 
-`data/raw/`, `results/` and the run-specific manifest are gitignored: they are
+Stage 5 adds to the record: `results/robustness_report.md` (human-readable),
+`results/robustness_summary.json` (machine-readable, and embedded in
+`results/run_log.json` when the stage runs inside the pipeline), and the supporting
+tables `robustness_redundancy.tsv`, `robustness_effective_n.tsv`,
+`robustness_ambiguity_sweep.tsv`, `robustness_conservation_modes.tsv`,
+`robustness_gene_level.tsv`, `robustness_gene_level_by_gene.tsv`,
+`robustness_gene_records.tsv`, `robustness_benchmark_guides.tsv`, plus the per-record
+`data/gene_corpus_manifest.tsv`. Both Entrez queries used to build the gene-level
+corpus are written into the report and the JSON summary.
+
+`data/raw/`, `results/` and the run-specific manifests are gitignored: they are
 regenerable, and a stale or smoke-test copy in version control would be misleading.
-Archive `data/manifest.tsv` and `results/run_log.json` alongside a manuscript — those
-two files plus this repository fully determine the results.
+Archive `data/manifest.tsv`, `data/gene_corpus_manifest.tsv` and
+`results/run_log.json` alongside a manuscript — those files plus this repository fully
+determine the results.
 
 ---
 
@@ -351,7 +533,9 @@ src/fetch_genomes.py     stage 1 - NCBI retrieval + manifest
 src/extract_guides.py    stage 2 - SpCas9 site enumeration from GenBank annotation
 src/conservation.py      stage 3 - alignment-free exact-match conservation scoring
 src/report.py            stage 4 - flags, ranking, guides_ranked.tsv
+src/robustness.py        stage 5 - redundancy, N-sensitivity, denominator sensitivity
 src/offtarget.py         STUB - human off-target screening, phase 2
 tests/test_core.py       offline unit tests (no network)
+tests/test_robustness.py offline unit tests for stage 5 (no network)
 requirements.txt         pinned, installed and tested on CPython 3.14.5
 ```

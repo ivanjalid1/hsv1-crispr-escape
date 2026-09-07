@@ -13,6 +13,7 @@ results/
 # version would be actively misleading.
 data/manifest.tsv
 data/fetch_summary.json
+data/gene_corpus_manifest.tsv
 
 # --- Python -------------------------------------------------------------------
 .venv/

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Single entrypoint: fetch genomes -> extract guides -> score conservation -> report.
+"""Single entrypoint: fetch genomes -> extract guides -> score conservation -> report
+-> (opt-in) robustness analysis.
 
 Every stage caches its output, so re-running is cheap and re-runnable. Stages are
 skipped when their output already exists and is newer than its inputs, unless
@@ -9,6 +10,9 @@ Examples
 --------
     # fast smoke test on 5 genomes
     python run_pipeline.py --limit 5
+
+    # full run plus the stage-5 robustness / denominator-sensitivity analysis
+    python run_pipeline.py --robustness
 
     # full HSV-1 run
     python run_pipeline.py
@@ -39,6 +43,7 @@ from src import extract_guides as stage_guides  # noqa: E402
 from src import fetch_genomes as stage_fetch  # noqa: E402
 from src import offtarget  # noqa: E402
 from src import report as stage_report  # noqa: E402
+from src import robustness as stage_robustness  # noqa: E402
 from src.common import (  # noqa: E402
     DEFAULT_RUNLOG,
     MissingCredentialsError,
@@ -72,6 +77,7 @@ def build_parser() -> argparse.ArgumentParser:
     stage_guides.add_arguments(parser)
     stage_conservation.add_arguments(parser)
     stage_report.add_arguments(parser)
+    stage_robustness.add_arguments(parser)
 
     parser.add_argument("--force", action="store_true",
                         help="Recompute every stage even if outputs exist.")
@@ -152,6 +158,18 @@ def main(argv: list[str] | None = None) -> int:
     ranked = stage_report.run(args)
     stages_run.append("report")
 
+    # ---- Stage 5 (opt-in): robustness / sensitivity ------------------------------
+    robustness_summary = None
+    if args.robustness:
+        LOG.info("[5/5] robustness (opt-in) ...")
+        robustness_summary = stage_robustness.run(args)
+        stages_run.append("robustness")
+    else:
+        LOG.info("[5/5] robustness: SKIPPED (pass --robustness to run it). The headline "
+                 "conservation numbers above are measured over %d complete genomes only; "
+                 "see results/robustness_report.md for what that denominator is worth.",
+                 len(manifest))
+
     # ---- Run log ----------------------------------------------------------------
     import numpy
     import Bio
@@ -184,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
             "implemented": offtarget.OFFTARGET_IMPLEMENTED,
             "caveat": offtarget.caveat(),
         },
+        "robustness": robustness_summary,
     }
     DEFAULT_RUNLOG.parent.mkdir(parents=True, exist_ok=True)
     DEFAULT_RUNLOG.write_text(json.dumps(run_log, indent=2), encoding="utf-8")

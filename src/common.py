@@ -26,6 +26,7 @@ DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"
 REF_DIR = RAW_DIR / "reference"
 META_DIR = RAW_DIR / "metadata"
+GENE_DIR = RAW_DIR / "genes"
 RESULTS_DIR = PROJECT_ROOT / "results"
 
 DEFAULT_MANIFEST = DATA_DIR / "manifest.tsv"
@@ -33,12 +34,14 @@ DEFAULT_CANDIDATES = RESULTS_DIR / "guides_candidates.tsv"
 DEFAULT_CONSERVATION = RESULTS_DIR / "conservation.tsv"
 DEFAULT_RANKED = RESULTS_DIR / "guides_ranked.tsv"
 DEFAULT_RUNLOG = RESULTS_DIR / "run_log.json"
+DEFAULT_GENE_MANIFEST = DATA_DIR / "gene_corpus_manifest.tsv"
+DEFAULT_ROBUSTNESS_REPORT = RESULTS_DIR / "robustness_report.md"
 
 TOOL_NAME = "hsv-crispr-conservation"
 
 
 def ensure_dirs() -> None:
-    for d in (DATA_DIR, RAW_DIR, REF_DIR, META_DIR, RESULTS_DIR):
+    for d in (DATA_DIR, RAW_DIR, REF_DIR, META_DIR, GENE_DIR, RESULTS_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 
