@@ -1,0 +1,25 @@
+# Tested and verified on Windows 11 / CPython 3.14.5 (64-bit) / pip 26.1.1
+# on 2026-09-07. Every package below installed from a prebuilt cp314 wheel --
+# nothing is compiled from source, and no conda / WSL / external binary is needed:
+#
+#   numpy-2.5.3-cp314-cp314-win_amd64.whl
+#   pandas-3.0.5-cp314-cp314-win_amd64.whl
+#   biopython-1.88-cp314-cp314-win_amd64.whl
+#
+# Install with:
+#   python -m venv .venv
+#   .venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
+#
+# The --only-binary=:all: flag is recommended: it makes pip FAIL LOUDLY if a
+# cp314 wheel is ever unavailable, instead of silently attempting a source build
+# that will fail without a C toolchain.
+
+# --- direct dependencies ---
+biopython==1.88
+numpy==2.5.3
+pandas==3.0.5
+
+# --- transitive dependencies (pinned for full reproducibility) ---
+python-dateutil==2.9.0.post0
+six==1.17.0
+tzdata==2026.3

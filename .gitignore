@@ -1,0 +1,43 @@
+# --- pipeline data products (regenerable; excluded on purpose) -----------------
+# Downloaded genomes. Re-created byte-identically by `python run_pipeline.py`
+# using the Entrez query + retrieval date recorded in data/manifest.tsv.
+data/raw/
+
+# All computed tables (guides_candidates.tsv, conservation.tsv, guides_ranked.tsv,
+# summary.json, run_log.json).
+results/
+
+# The manifest and fetch summary are run artifacts too. They are the
+# reproducibility record for a *specific* run, so they are archived alongside a
+# manuscript rather than committed to the repo, where a stale or smoke-test
+# version would be actively misleading.
+data/manifest.tsv
+data/fetch_summary.json
+
+# --- Python -------------------------------------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- editors / OS -------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- never commit credentials -------------------------------------------------
+# NCBI_EMAIL / NCBI_API_KEY must live in the environment, never in the repo.
+.env
+.env.*
+*.key
