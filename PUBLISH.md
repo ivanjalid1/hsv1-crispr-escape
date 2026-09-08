@@ -224,7 +224,7 @@ interchangeable either**:
 | 13 | `README.md:391-392` | bare DOI in the `doi:` entry, plus the resolvable URL | `doi:` `10.5281/zenodo.22664837` — <https://doi.org/10.5281/zenodo.22664837> |
 | 14 | `manuscript/manuscript.md:376` | prose: repository URL, bare DOI **and** the resolvable `https://doi.org/…` URL; the `[CITATION NEEDED]` bracket is gone | see Step 5 |
 | 15 | `manuscript/references.md:61-65` | full software-citation entry (author, title, version, `[software]`, publisher Zenodo, year, DOI, repository) | reference 10, `Heredia Jalid I.` |
-| 16 | `manuscript/references.md:344-352` | checklist item 14, flipped `UNRESOLVED` → `RESOLVED` | — |
+| 16 | `manuscript/references.md:344-353` | checklist item 14, flipped `UNRESOLVED` → `RESOLVED` | — |
 
 `cffconvert --validate -i CITATION.cff` reports *"Citation metadata are valid according
 to schema version 1.2.0"* with both fields live, and the generated BibTeX carries
@@ -532,7 +532,7 @@ external service:**
 The Zenodo concept DOI and the release date are **done** and are no longer placeholders:
 `CITATION.cff:49`, `CITATION.cff:54`, `README.md:3` (badge), `README.md:391-392`,
 `manuscript/manuscript.md:376`, `manuscript/references.md:61-65` and
-`manuscript/references.md:344-352` all carry `10.5281/zenodo.22664837`. The version DOI
+`manuscript/references.md:344-353` all carry `10.5281/zenodo.22664837`. The version DOI
 `10.5281/zenodo.22664838` is intentionally absent from every file except this one, which
 records it so it is not re-confused later; the check is in Step 1d.
 
