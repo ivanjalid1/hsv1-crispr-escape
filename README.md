@@ -689,9 +689,15 @@ indel that destroys recognition and leaves the protein working. Frameshifts in a
 essential gene are not escape. In-frame indels are scored against a per-codon
 tolerance profile *measured from cross-strain amino-acid variation in the same 183
 genomes*: a codon that varies among viable clinical isolates is demonstrably
-tolerant. The NHEJ indel-length spectrum could not be verified offline and is shipped
-as an explicitly labelled ASSUMPTION with an override and a sensitivity sweep; no
-citation is invented for it.
+tolerant. The DEFAULT NHEJ indel-length spectrum is an explicitly labelled
+ASSUMPTION with an override and a sensitivity sweep; no citation is invented for it.
+The sweep also includes one spectrum that is measured rather than posited --
+`neuronal_nhej`, the pooled CRISPResso2 net-length histogram deposited with Ramadoss
+et al. 2025 Fig. 1d, from post-mitotic human iPSC-derived neurons (in-frame fraction
+0.090 against 0.199 for the default). It lowers escape, leaves every selected guide
+set unchanged, and stays a SCENARIO rather than becoming the default, because it was
+measured with SpCas9 at one human locus in culture and not with SaCas9 in a
+trigeminal ganglion. See `refs/ramadoss2025_notes.md`.
 
 | set | k | joint conservation | P(escape) per exposed genome |
 |---|---|---|---|
@@ -862,11 +868,14 @@ Read these before using any guide from this table.
    genome or about editing efficiency. The last item on this list — the rate at which
    NHEJ repair generates cut-resistant escape variants, which is the actual
    motivation for multiplex design — is now modelled by stage 7, but *modelled* is
-   the operative word: its NHEJ indel-length spectrum is a labelled ASSUMPTION rather
-   than a measurement, its absolute escape probabilities move over ~3 orders of
-   magnitude across the plausible parameter space, and with 183 genomes a two-guide
-   set cannot be certified below ~2.6e-04 whatever the repair term says. What is
-   stable across the sweep is the ranking of guide sets, not the numbers.
+   the operative word: its DEFAULT NHEJ indel-length spectrum is a labelled
+   ASSUMPTION rather than a measurement, its absolute escape probabilities move over
+   ~3 orders of magnitude across the plausible parameter space, and with 183 genomes
+   a two-guide set cannot be certified below ~2.6e-04 whatever the repair term says.
+   The sweep now includes the one spectrum measured in the right cell class
+   (`neuronal_nhej`, post-mitotic human neurons), which moves escape DOWN and the
+   selected sets not at all. What is stable across the sweep is the ranking of guide
+   sets, not the numbers.
 
 8. **The per-gene corpus is thinner than GenBank's record counts suggest.** Only
    1,021 of 4,552 sub-genomic HSV-1 records cover any of the seven target genes, and

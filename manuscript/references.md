@@ -88,7 +88,10 @@ Listed alphabetically by first author.
     Adamson B, Murthy N, Doudna JA, Kampmann M, Conklin BR.** Characterizing and
     controlling CRISPR repair outcomes in nondividing human cells.
     *Nature Communications* 2025;16(1):9883. doi:10.1038/s41467-025-66058-3.
-    PMID 41249169.
+    PMID 41249169; PMCID PMC12623481.
+    Open access: https://europepmc.org/articles/PMC12623481
+    Source data (the authors' own Data Availability statement): FigShare article
+    30366298, doi:10.6084/m9.figshare.30366298.v1 (published 2025-10-15)
 
 16. **Ran FA, Cong L, Yan WX, Scott DA, Gootenberg JS, Kriz AJ, Zetsche B, Shalem O,
     Wu X, Makarova KS, Koonin EV, Sharp PA, Zhang F.** In vivo genome editing using
@@ -180,8 +183,16 @@ Listed alphabetically by first author.
 - **Ramadoss et al. 2025** supports the repair-pathway statements about the target cell
   type: that resting human neurons resolve Cas9-induced breaks over a longer window
   than isogenic dividing cells, upregulate non-canonical repair factors, and favour
-  NHEJ over MMEJ, yielding a narrower distribution of smaller indels. It is used in
-  Limitation 5 only, and does **not** supply a spectrum for the model.
+  NHEJ over MMEJ, yielding a narrower distribution of smaller indels. It is cited in
+  Sections 2.7, 5.7 and Limitation 5. It now **also supplies a swept sensitivity
+  scenario** for the model, `neuronal_nhej`: not from the running text, which states
+  the distribution only qualitatively, but from the raw CRISPResso2 indel histograms
+  the authors deposit as source data for their Figure 1d (FigShare article 30366298),
+  pooled over their six neuron replicates and archived here as
+  `refs/ramadoss2025_fig1d_indel_histogram.tsv`. It supplies a **scenario, not the
+  default**: the measurement is SpCas9 at one locus in cultured human iPSC-derived
+  neurons, and the therapy is SaCas9 in trigeminal-ganglion neurons in vivo.
+  `refs/ramadoss2025_notes.md` records exactly what was and was not extractable.
 - **Ran et al. 2015** supports the SaCas9 PAM statement. Read it carefully: it reports
   `NNGRRT` as the PAM at which SaCas9 cleaves *most efficiently*, and simultaneously
   reports sixth-position degeneracy, concluding that all `NNGRR` PAMs can be cleaved
@@ -279,8 +290,10 @@ order of appearance.
    both show repair outcomes are reproducible but strongly target-sequence dependent,
    and both were measured in dividing cells. Ramadoss et al. 2025
    (*Nat Commun* 16:9883) shows the distribution differs in the post-mitotic neurons
-   this therapy targets. The manuscript now cites these to justify *why* the spectrum
-   remains a swept assumption, which is stronger than an attribution would have been.
+   this therapy targets, and its deposited Figure 1d source data is now swept as the
+   `neuronal_nhej` scenario. The manuscript cites these to justify *why* the DEFAULT
+   spectrum remains a swept assumption, which is stronger than an attribution would
+   have been, and reports the measured neuronal scenario alongside it.
 
 10. **MMEJ deletion spectra and pathway choice across cell types.** **RESOLVED, AND
     UPGRADED** — Sfeir and Symington 2015 (*Trends Biochem Sci* 40:701–714) for MMEJ
@@ -290,7 +303,11 @@ order of appearance.
     neurons**: they resolve Cas9-induced breaks over a substantially longer window than
     isogenic dividing cells, upregulate non-canonical repair factors, and favour NHEJ
     over MMEJ, giving a narrower distribution of smaller indels. This is directly on
-    the target cell type of the therapy under audit and is now stated in Limitation 5.
+    the target cell type of the therapy under audit. It is stated in Limitation 5 and,
+    since their Figure 1d source data was retrieved, **quantified and swept** as the
+    `neuronal_nhej` scenario in Sections 2.7 and 5.7 — measured in-frame fraction
+    0.090, against 0.289 in the isogenic dividing arm of the same experiment and 0.199
+    for this model's parametric default.
 
 ### Methods (Section 5)
 

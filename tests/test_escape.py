@@ -193,7 +193,7 @@ def test_monte_carlo_agrees_with_closed_form():
 
 def test_spectrum_normalisation_and_inframe_fraction():
     for name in ("default", "deletion-heavy", "insertion-heavy", "short-indels",
-                 "uniform-1to20"):
+                 "uniform-1to20", "neuronal_nhej", "ipsc_dividing"):
         spec = builtin_spectrum(name)
         cond = spec.conditional
         assert abs(sum(cond.values()) - 1.0) < 1e-12, name
@@ -216,6 +216,98 @@ def test_spectrum_rescaling_hits_the_target_exactly():
         base, new = spec.conditional, r.conditional
         assert abs(base[-3] / base[-6] - new[-3] / new[-6]) < 1e-12
     print("ok  in-frame rescaling hits its target and preserves within-class shape")
+
+
+def test_neuronal_nhej_scenario_is_pinned_to_the_archived_histogram():
+    """Pin the measured post-mitotic-neuron scenario, end to end.
+
+    This scenario is the only built-in whose SHAPE comes from published data
+    (Ramadoss et al. 2025, Nat Commun 16:9883, Fig. 1d deposited source data, pooled
+    over six replicates of SpCas9 RNP editing in human iPSC-derived neurons). If the
+    archived histogram in refs/ ever changes, or the loader stops reading the neuron
+    column, these numbers move and the test fails -- which is the point: a number
+    attributed to a paper must not be silently editable.
+
+    The values below were computed once from
+    refs/ramadoss2025_fig1d_indel_histogram.tsv and are documented, with the
+    extraction method, in refs/ramadoss2025_notes.md.
+    """
+    from src.escape import RAMADOSS2025_HISTOGRAM, neuronal_nhej_spectrum
+
+    assert RAMADOSS2025_HISTOGRAM.is_file(), RAMADOSS2025_HISTOGRAM
+
+    neu = builtin_spectrum("neuronal_nhej")
+    assert neu.name == "neuronal_nhej"
+    assert "MEASURED" in neu.provenance and "ASSUMPTION" in neu.provenance, \
+        "the scenario must state BOTH halves of its provenance"
+    assert abs(sum(neu.conditional.values()) - 1.0) < 1e-12
+
+    # Pooled measured summary statistics.
+    assert abs(neu.p_wt - 0.537735) < 1e-5
+    assert abs(neu.inframe_fraction - 0.090341) < 1e-5
+    assert abs(neu.mean_deletion_length - 6.598602) < 1e-5
+
+    cond = neu.conditional
+    # +1 is the single most probable outcome; +-1 and +-2 dominate and all frameshift.
+    assert max(cond, key=cond.get) == 1
+    assert abs(cond[1] - 0.294036) < 1e-5
+    assert sum(p for L, p in cond.items() if abs(L) <= 2) > 0.75
+    assert all(L % 3 != 0 for L in (1, -1, 2, -2))
+
+    # The direction that matters for an essential gene: the measured post-mitotic
+    # spectrum is MORE frameshifting than the assumed default, so escape must fall.
+    default = builtin_spectrum("default")
+    assert neu.inframe_fraction < default.inframe_fraction
+    # ... and below the whole 0.10-0.50 band the inframe_fraction group sweeps.
+    assert neu.inframe_fraction < 0.10
+
+    # The isogenic dividing-cell arm of the same experiment is the control, and it
+    # must sit on the other side of the default.
+    ipsc = builtin_spectrum("ipsc_dividing")
+    assert abs(ipsc.inframe_fraction - 0.289293) < 1e-5
+    assert ipsc.inframe_fraction > default.inframe_fraction > neu.inframe_fraction
+    assert ipsc.mean_deletion_length > neu.mean_deletion_length
+
+    # Escape at a site must actually be lower under the neuronal scenario, holding
+    # everything else fixed. Frameshifts are lethal in an essential gene, so a more
+    # frameshifting spectrum is a less escapable one.
+    tol = np.full(200, 0.5)
+    p = Params()
+    q_neu = site_repair_escape(neu, tol, 100, "UL30", 1, p)["q_site"]
+    q_def = site_repair_escape(default, tol, 100, "UL30", 1, p)["q_site"]
+    q_ips = site_repair_escape(ipsc, tol, 100, "UL30", 1, p)["q_site"]
+    assert q_neu < q_def, (q_neu, q_def)
+    # NOTE the iPSC arm deliberately does NOT complete an ordering here. It has the
+    # highest in-frame fraction of the three but also much longer deletions (mean
+    # 12.7 nt against 6.6 nt), and a long in-frame deletion must survive a product of
+    # per-codon tolerances over every codon it removes. The two effects oppose each
+    # other, so q is not monotone in the in-frame fraction alone. That is worth
+    # pinning rather than glossing: the report's claim is that the spectrum acts
+    # ALMOST entirely through its in-frame fraction, not entirely.
+    assert q_ips < q_def, (q_ips, q_def)
+    assert ipsc.inframe_fraction > default.inframe_fraction
+
+    # It is a SCENARIO, not the default. The default must be untouched.
+    from src.escape import load_spectrum
+    assert load_spectrum("default").name == "parametric-default"
+    assert abs(load_spectrum("default").inframe_fraction - 0.198571) < 1e-5
+    print("ok  neuronal_nhej is pinned to the archived Ramadoss et al. 2025 histogram")
+
+
+def test_neuronal_nhej_is_swept_but_is_not_the_default():
+    """The scenario must appear in the sweep and must not displace the baseline."""
+    import inspect
+
+    from src import escape as esc
+
+    src = inspect.getsource(esc.sensitivity)
+    assert "neuronal_nhej" in src, "the scenario is not in the sensitivity sweep"
+    # The sweep's own baseline row uses the spectrum passed in, and the CLI default
+    # for that is 'default'. Both must remain so, or every previously published
+    # absolute number in this repository silently changes.
+    parser_src = inspect.getsource(esc.add_arguments)
+    assert '"--indel-spectrum", default="default"' in parser_src
+    print("ok  neuronal_nhej is swept as a scenario and is not the default")
 
 
 def test_user_supplied_spectrum_round_trips():

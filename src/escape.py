@@ -62,11 +62,15 @@ finding here, because the only in vivo on-target measurement in Amrani et al. is
 
 Honesty rules applied throughout
 --------------------------------
-* No fabricated citations. The NHEJ indel-length spectrum could not be verified
-  offline and is therefore shipped as an explicitly labelled ASSUMPTION with a
-  documented shape, a stated default, and a `--indel-spectrum` /
-  `--inframe-fraction` override. Everything measured from this repository's data is
-  labelled MEASURED.
+* No fabricated citations. The DEFAULT NHEJ indel-length spectrum is an explicitly
+  labelled ASSUMPTION with a documented shape, a stated default, and a
+  `--indel-spectrum` / `--inframe-fraction` override. Everything measured from this
+  repository's data is labelled MEASURED. One swept SCENARIO, `neuronal_nhej`, has a
+  measured shape: it is the pooled CRISPResso2 net-length histogram deposited as source
+  data with Ramadoss et al. 2025 Fig. 1d, from post-mitotic human iPSC-derived neurons.
+  It is measured in THEIR system and an assumption for OURS (different nuclease,
+  different cells, different species), so it widens the sweep and does not become the
+  default. See refs/ramadoss2025_notes.md.
 * Independence between sites is never silently assumed. Site *presence* uses the
   empirical joint matrix. Site *repair* is assumed independent given the genome, and
   the size and direction of that assumption's error is bounded in the report.
@@ -264,10 +268,82 @@ def parametric_spectrum(
     return IndelSpectrum(name, probs)
 
 
+#: Pooled CRISPResso2 net-length histogram from Ramadoss et al. 2025 Fig. 1d source data
+#: (FigShare 30366298). Columns: length, neuron_reads, ipsc_reads. See
+#: refs/ramadoss2025_notes.md for exactly what was and was not extractable from that
+#: paper, and for the caveats attached to using it here.
+RAMADOSS2025_HISTOGRAM = PROJECT_ROOT / "refs" / "ramadoss2025_fig1d_indel_histogram.tsv"
+
+#: The one honest sentence about this scenario, printed wherever it is used.
+NEURONAL_NHEJ_PROVENANCE = (
+    "MEASURED in Ramadoss et al. 2025 (Nat Commun 16:9883) Fig. 1d deposited source "
+    "data -- pooled CRISPResso2 net-length histogram over 6 replicates, 118,722 reads, "
+    "SpCas9 RNP + sgRNA B2Mg1 at human B2M in iPSC-derived neurons, 4 d post-"
+    "transduction; ASSUMPTION when transferred to SaCas9 in trigeminal-ganglion neurons"
+)
+
+
+def neuronal_nhej_spectrum(arm: str = "neuron",
+                           path: Path | None = None) -> IndelSpectrum:
+    """The measured post-mitotic-neuron NHEJ spectrum, as a SENSITIVITY SCENARIO.
+
+    This is the only built-in spectrum whose SHAPE is measured rather than posited, and
+    the distinction is worth being precise about rather than rounding off in either
+    direction:
+
+    * MEASURED, in Ramadoss et al. 2025's cells. Their Fig. 1d deposits raw CRISPResso2
+      `Indel_histogram.txt` for six neuron and six isogenic-iPSC replicates; the file
+      read here is those counts, pooled per arm, verbatim. Nothing is fitted, smoothed
+      or extrapolated. The paper's own running text describes the distribution only
+      qualitatively ("a much narrower distribution of outcomes"); the numbers come from
+      its deposited data, not from reading its figures.
+    * ASSUMPTION, for this therapy. Their neurons are cultured human iPSC-derived
+      neurons cut by SpCas9 at one locus with one guide. The therapy under audit uses
+      SaCas9 in latently infected mouse/rabbit trigeminal ganglia. A mouse trigeminal
+      ganglion is not a cultured human neuron, and the paper itself shows the spectrum
+      is strongly guide-dependent. This scenario therefore WIDENS the swept space; it
+      does not replace the default and is not a measurement of the modelled system.
+
+    `arm="ipsc"` returns the isogenic dividing-cell arm of the same experiment. It is
+    not swept; it exists so the cell-type contrast can be reproduced from the same file
+    by anyone checking the direction of the effect.
+    """
+    p = path or RAMADOSS2025_HISTOGRAM
+    if not p.is_file():
+        raise SystemExit(
+            f"{p} is missing. It ships with the repository; see "
+            "refs/ramadoss2025_notes.md for how it was extracted."
+        )
+    col = {"neuron": "neuron_reads", "ipsc": "ipsc_reads"}[arm]
+    df = pd.read_csv(p, sep="\t")
+    missing = {"length", col} - set(df.columns)
+    if missing:
+        raise SystemExit(f"{p}: expected columns length, {col}")
+    counts = {int(r.length): float(getattr(r, col)) for r in df.itertuples(index=False)}
+    z = sum(counts.values())
+    if z <= 0:
+        raise SystemExit(f"{p}: {col} sums to {z}")
+    name = "neuronal_nhej" if arm == "neuron" else "ipsc_dividing"
+    prov = NEURONAL_NHEJ_PROVENANCE
+    if arm == "ipsc":
+        prov = prov.replace("iPSC-derived neurons", "the isogenic parental iPSCs")
+    return IndelSpectrum(name, {L: c / z for L, c in counts.items() if c > 0},
+                         provenance=prov)
+
+
 def builtin_spectrum(name: str) -> IndelSpectrum:
-    """Named alternative spectra, all ASSUMPTIONS, used for the sensitivity sweep."""
+    """Named alternative spectra, used for the sensitivity sweep.
+
+    All are ASSUMPTIONS except `neuronal_nhej` / `ipsc_dividing`, whose shapes are read
+    from published measured data -- see `neuronal_nhej_spectrum` for the precise sense
+    in which those two are and are not measurements of the system being modelled.
+    """
     if name in ("default", "parametric-default"):
         return parametric_spectrum()
+    if name == "neuronal_nhej":
+        return neuronal_nhej_spectrum("neuron")
+    if name == "ipsc_dividing":
+        return neuronal_nhej_spectrum("ipsc")
     if name == "deletion-heavy":
         return parametric_spectrum(p_insertion=0.15, del_mean=12.0,
                                    name="deletion-heavy")
@@ -285,8 +361,8 @@ def builtin_spectrum(name: str) -> IndelSpectrum:
         return IndelSpectrum("uniform-1to20", probs)
     raise SystemExit(
         f"Unknown indel spectrum {name!r}. Built-ins: default, deletion-heavy, "
-        "insertion-heavy, short-indels, uniform-1to20; or give a path to a TSV with "
-        "columns 'length' and 'probability'."
+        "insertion-heavy, short-indels, uniform-1to20, neuronal_nhej, ipsc_dividing; "
+        "or give a path to a TSV with columns 'length' and 'probability'."
     )
 
 
@@ -1166,8 +1242,12 @@ def sensitivity(pool, profiles, cds_copies, nuclease, base_spectrum, base_params
         add("tol_invariant", f"tol_invariant={v:g}", None, tol_invariant=v)
     for v in (1, 2, 3, 5):
         add("min_variant_strains", f"min_variant_strains={v}", None, min_variant_strains=v)
+    # `neuronal_nhej` is the one swept spectrum whose shape is measured rather than
+    # posited (Ramadoss et al. 2025 Fig. 1d source data, post-mitotic human neurons).
+    # It is a SCENARIO, not the default: the default stays where it was so that every
+    # previously reported number remains reproducible, and this widens the swept space.
     for name in ("default", "deletion-heavy", "insertion-heavy", "short-indels",
-                 "uniform-1to20"):
+                 "uniform-1to20", "neuronal_nhej"):
         variants.append(("indel_spectrum", f"spectrum={name}",
                          builtin_spectrum(name), base_params))
     for f in (0.10, 0.20, 0.25, 0.33, 0.50):
@@ -1388,8 +1468,11 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--thresholds", default="1e-3,1e-6")
     parser.add_argument("--indel-spectrum", default="default",
                         help="Built-in name (default, deletion-heavy, insertion-heavy, "
-                             "short-indels, uniform-1to20) or a TSV with columns "
-                             "length, probability. LABELLED AS AN ASSUMPTION.")
+                             "short-indels, uniform-1to20, neuronal_nhej, "
+                             "ipsc_dividing) or a TSV with columns length, probability. "
+                             "The default is LABELLED AS AN ASSUMPTION; neuronal_nhej "
+                             "and ipsc_dividing are measured in Ramadoss et al. 2025's "
+                             "cells and remain assumptions for this therapy's.")
     parser.add_argument("--inframe-fraction", type=float, default=None,
                         help="Override the spectrum's in-frame fraction directly; this "
                              "is the one summary statistic the model is sensitive to.")
@@ -1583,6 +1666,7 @@ def assemble_context(args, nuclease, genes, record, manifest, accessions, pool,
     lead_cols = [model.index[g] for g in lead]
     p_lead = model.p_escape(lead_cols)
     jc_lead = model.joint_conservation(lead_cols)
+    _NEURONAL_INFRAME = neuronal_nhej_spectrum("neuron").inframe_fraction
 
     # ---- parameter table ------------------------------------------------------------
     fs = params.frameshift_map()
@@ -1599,7 +1683,9 @@ def assemble_context(args, nuclease, genes, record, manifest, accessions, pool,
         {"parameter": "indel length spectrum", "value": spectrum.name,
          "source": f"{spectrum.provenance} -- no citation invented",
          "effect if wrong": "acts almost entirely through its in-frame fraction "
-                            f"({spectrum.inframe_fraction:.3f}); swept 0.10-0.50"},
+                            f"({spectrum.inframe_fraction:.3f}); swept 0.10-0.50, plus "
+                            "the measured post-mitotic-neuron scenario neuronal_nhej "
+                            f"({_NEURONAL_INFRAME:.3f}), which sits BELOW that range"},
         {"parameter": "tol_variable", "value": params.tol_variable, "source": "ASSUMPTION",
          "effect if wrong": "scales q at variable codons; swept 0.10-1.00"},
         {"parameter": "tol_invariant", "value": params.tol_invariant, "source": "ASSUMPTION",
@@ -2084,6 +2170,32 @@ def assemble_context(args, nuclease, genes, record, manifest, accessions, pool,
     else:
         max_span_head, n_all_match_head, n_settings_head = "(not swept)", 0, 0
 
+    # The measured post-mitotic-neuron scenario, for the headline. Every number is read
+    # back out of the sweep or off the archived histogram; none is written by hand.
+    neuronal_head = []
+    if sens_tsv is not None and (sens_tsv["label"] == "spectrum=neuronal_nhej").any():
+        _nh = sens_tsv[sens_tsv["label"] == "spectrum=neuronal_nhej"].iloc[0]
+        _bh = sens_tsv[sens_tsv["label"] == "baseline"].iloc[0]
+        _sp = neuronal_nhej_spectrum("neuron").conditional
+        _small = sum(p for L, p in _sp.items() if abs(L) <= 2)
+        _mcn = [c for c in sens_tsv.columns if c.endswith("_matches_baseline")]
+        neuronal_head = [
+            f"**The indel spectrum measured in post-mitotic human neurons is now one "
+            f"of those settings, and it cuts our way.** Ramadoss et al. 2025's "
+            f"deposited Fig. 1d source data, swept here as `spectrum=neuronal_nhej`, "
+            f"has an in-frame fraction of {float(_nh['inframe_fraction']):.3f} -- "
+            f"below the 0.10-0.50 band swept previously, because +-1 and +-2 nt "
+            f"account for {_small:.0%} of neuronal indels and every one of them "
+            f"frameshifts. Escape FALLS "
+            f"({float(_bh['p_escape_amrani_pair']) / float(_nh['p_escape_amrani_pair']):.1f}x "
+            f"for the published pair), not rises, and the selected sets are "
+            f"{'unchanged at every k' if bool(_nh[_mcn].all()) else 'NOT unchanged -- see section 8.1'}. "
+            f"The default spectrum is deliberately left where it was: it is the more "
+            f"pessimistic of the two, and the neuronal measurement is in cultured "
+            f"human neurons cut by SpCas9, not in a trigeminal ganglion cut by "
+            f"SaCas9.",
+        ]
+
     headline = [
         f"**The Amrani et al. lead pair (ICP0g2 + ICP27g1) scores P(escape) = "
         f"{_sci(p_lead)} per exposed viral genome** under the baseline parameters, "
@@ -2121,6 +2233,7 @@ def assemble_context(args, nuclease, genes, record, manifest, accessions, pool,
         f"across {n_all_match_head} of {n_settings_head} parameter settings. That "
         f"combination -- stable ranking, unstable absolute scale -- is the honest and "
         f"still-useful result, and section 8.1 says so at length.",
+        *neuronal_head,
         "One conclusion runs the competitor's way. Under the repeat model in which "
         "both ICP0 copies must independently produce a viable escape allele, a single "
         "ICP0 guide is worth two guides elsewhere -- which is exactly the 'ICP0 is "
@@ -2334,9 +2447,27 @@ probability, and the RANK ORDER of candidate sites.
         worst_rho = float(rank_table["min Spearman rho of site q"].min())
         worst_top = float(rank_table["min top-20 site overlap"].min())
         max_span = float(rank_table["orders of magnitude spanned"].max())
+        _b = sens_tsv[sens_tsv["label"] == "baseline"].iloc[0]
+        _n = sens_tsv[sens_tsv["label"] == "spectrum=neuronal_nhej"].iloc[0]
+        _neu_match_cols = [c for c in sens_tsv.columns
+                           if c.endswith("_matches_baseline")]
+        _neu_all_match = bool(_n[_neu_match_cols].all())
+        _neu_k = {}
+        for _k in (1, 2, 3, 4):
+            _c = f"p_escape_best_k{_k}"
+            if _c in sens_tsv.columns and pd.notna(_n[_c]) and float(_n[_c]) > 0:
+                _neu_k[_k] = float(_b[_c]) / float(_n[_c])
+        _neu_folds = ", ".join(f"{_v:.0f}x at k={_k}" for _k, _v in _neu_k.items())
+        _neu_thresh = all(
+            _b[c] == _n[c] or (pd.isna(_b[c]) and pd.isna(_n[c]))
+            for c in sens_tsv.columns if c.startswith("min_k_below_")
+        )
+        _neu_cond = neuronal_nhej_spectrum("neuron").conditional
+        _neu_small = sum(p for L, p in _neu_cond.items() if abs(L) <= 2)
+        _ipsc_inframe = neuronal_nhej_spectrum("ipsc").inframe_fraction
         rank_prose = f"""
 **This is the honest headline of the sensitivity analysis, and it is not a clean
-"the ranking is robust" result.** It has three parts and they should be read together.
+"the ranking is robust" result.** It has four parts and they should be read together.
 
 **1. Absolute probabilities are not usable as measurements.** Across the swept space
 the escape probability of a fixed guide set moves by up to {max_span_head} orders of
@@ -2364,6 +2495,46 @@ rather than noise.** The rank correlation of per-site q falls as low as
   an ICP0 guide is not determined by the available data** -- it depends on whether
   cutting both repeat copies must be escaped twice, and on whether an ICP0 frameshift
   is lethal. Both are experiments, not parameters.
+
+**4. The one swept spectrum that is not an assumption moves the absolute scale and
+leaves the selection untouched.** `spectrum=neuronal_nhej` is the pooled CRISPResso2
+net-length histogram deposited as source data with Ramadoss et al. 2025 Fig. 1d --
+118,722 reads over six replicates of SpCas9 RNP editing in post-mitotic human
+iPSC-derived neurons, next to the genetically identical dividing iPSCs. Its shape is
+MEASURED; its applicability to SaCas9 in a latently infected trigeminal ganglion is
+not, which is why it is a scenario here and not the default. Three things follow.
+
+* Its in-frame fraction is **{float(_n['inframe_fraction']):.3f}**, against
+  {float(_b['inframe_fraction']):.3f} for the default -- and BELOW the 0.10-0.50 band
+  the `inframe_fraction` group sweeps. The measured post-mitotic spectrum was outside
+  the range this model previously explored.
+* Escape therefore FALLS, and it falls harder the more guides you use, because q
+  multiplies across sites: the published pair goes
+  {_sci(float(_b['p_escape_amrani_pair']))} -> {_sci(float(_n['p_escape_amrani_pair']))}
+  ({float(_b['p_escape_amrani_pair']) / float(_n['p_escape_amrani_pair']):.2f}x lower),
+  and the best sets fall {_neu_folds}. The direction is worth being explicit about
+  because it is easy to get backwards: "a narrower distribution of smaller indels"
+  reads like a gentler outcome, but +-1 and +-2 nt are {_neu_small:.0%} of the measured
+  neuronal indels and every one of them is a frameshift. A smaller indel in an
+  essential gene is a MORE lethal indel. If neurons repair the way Ramadoss et al.
+  measured, this model's default is conservative -- it over-states escape.
+* The selection does not move. Spearman rho of per-site q against baseline is
+  {float(_n['spearman_q_vs_baseline']):.6f}, top-20 overlap
+  {float(_n['top20_site_overlap_vs_baseline']):.0%}, the best sets at every k
+  {'match the baseline exactly' if _neu_all_match else 'do NOT all match the baseline'},
+  and the minimum-k answers at both thresholds are
+  {'unchanged' if _neu_thresh else 'CHANGED -- see the sensitivity table'}. This is the
+  same pattern as the rest of the sweep, now demonstrated against measured rather than
+  posited numbers: the absolute scale is not a measurement, and the ranking is what the
+  model is for.
+
+The isogenic dividing arm of the same experiment is available as `ipsc_dividing` and is
+deliberately NOT swept -- it is the control that shows the shift is a cell-type effect
+and not a batch effect (in-frame fraction {_ipsc_inframe:.3f} in the iPSCs against
+{float(_n['inframe_fraction']):.3f} in the neurons -- same experiment, same guide,
+same Cas9 dose, cells differing only in whether they had been differentiated).
+Sweeping both arms would double-count one experiment as two independent constraints on
+the same parameter.
 
 **The one result that flips a design conclusion is worth stating on its own.** Under
 `repeat_model=all-copies` -- the regime in which a guide cutting both ICP0 repeat
@@ -2459,10 +2630,16 @@ model is about the first, and is silent about the second.
         "presents. Within-host diversity is lower; between-host diversity is what is "
         "measured here. That makes the presence term pessimistic for a single patient "
         "and appropriate for a product intended for a population.",
-        "9. **It cannot account for repair pathway choice.** Microhomology-mediated "
-        "end joining produces predictable, often larger deletions with a different "
-        "in-frame fraction than the assumed spectrum, and its use varies by cell type "
-        "-- neurons are exactly the cell type where the least is known.",
+        "9. **It models repair pathway choice only as a swept scenario, not as a "
+        "mechanism.** Microhomology-mediated end joining produces predictable, often "
+        "larger deletions with a different in-frame fraction, and its use varies by "
+        "cell type. Section 8 now sweeps a spectrum measured in post-mitotic human "
+        "neurons (`neuronal_nhej`) alongside the assumed default, which bounds the "
+        "consequence of that pathway shift for THIS model. It does not make the model "
+        "pathway-aware: there is still one spectrum per run, applied to every site "
+        "identically, with no dependence on the local microhomology content of the "
+        "target -- which is the very thing the source paper shows drives the "
+        "guide-to-guide differences.",
     ]
 
     repro = f"""
@@ -2521,7 +2698,31 @@ max unanchored bridge={args.max_unanchored} nt, minimum resolved fraction 0.95.
                 float(np.log10(max(sens_tsv["p_escape_amrani_pair"].max(), 1e-300)
                                / max(sens_tsv["p_escape_amrani_pair"].min(), 1e-300))),
             "min_spearman_rho": float(np.nanmin(sens_tsv["spearman_q_vs_baseline"])),
+            "n_settings": int(len(sens_tsv)),
+            "n_settings_all_best_sets_match_baseline": int(
+                sens_tsv[[c for c in sens_tsv.columns
+                          if c.endswith("_matches_baseline")]].all(axis=1).sum()),
         }
+        _nrow = sens_tsv[sens_tsv["label"] == "spectrum=neuronal_nhej"]
+        if len(_nrow):
+            _nrow = _nrow.iloc[0]
+            _brow = sens_tsv[sens_tsv["label"] == "baseline"].iloc[0]
+            summary["sensitivity"]["neuronal_nhej_scenario"] = {
+                "provenance": NEURONAL_NHEJ_PROVENANCE,
+                "source_file": RAMADOSS2025_HISTOGRAM.name,
+                "inframe_fraction": float(_nrow["inframe_fraction"]),
+                "baseline_inframe_fraction": float(_brow["inframe_fraction"]),
+                "p_escape_amrani_pair": float(_nrow["p_escape_amrani_pair"]),
+                "p_escape_amrani_pair_baseline": float(_brow["p_escape_amrani_pair"]),
+                "fold_lower_amrani_pair": float(_brow["p_escape_amrani_pair"])
+                / float(_nrow["p_escape_amrani_pair"]),
+                "spearman_q_vs_baseline": float(_nrow["spearman_q_vs_baseline"]),
+                "top20_site_overlap_vs_baseline":
+                    float(_nrow["top20_site_overlap_vs_baseline"]),
+                "best_sets_all_match_baseline": bool(
+                    _nrow[[c for c in sens_tsv.columns
+                           if c.endswith("_matches_baseline")]].all()),
+            }
 
     return {
         "generated": generated,

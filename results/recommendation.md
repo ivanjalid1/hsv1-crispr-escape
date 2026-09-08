@@ -186,6 +186,27 @@ this.
 | `RL2_5080+` | 0.9781 | 179/183 | 2.5145e-04 | 3.87 |
 | `RL2_3441+` | 0.9781 | 179/183 | 2.5145e-04 | 3.87 |
 
+### The same table under the measured post-mitotic-neuron indel spectrum
+
+The default indel spectrum is a labelled assumption parameterised from dividing-cell
+intuition, and the therapy targets post-mitotic neurons. Stage 7 now sweeps the
+measured alternative — `spectrum=neuronal_nhej`, the pooled CRISPResso2 net-length
+histogram deposited with Ramadoss et al. 2025 Fig. 1d, in-frame fraction 0.090 against
+0.199 for the default (`refs/ramadoss2025_notes.md`). Re-running the pairing above with
+per-site `q` from that scenario:
+
+| ICP0 guide, paired with ICP27g1 | P(escape), default | P(escape), `neuronal_nhej` | fold better than the published pair |
+|---|---|---|---|
+| ICP0g2 (`RL2_4496+`) — as published | 9.7199e-04 | 3.6419e-04 | 1.00 |
+| **`RL2_5335+`** | **2.5145e-04** | **8.6156e-05** | **4.23** (was 3.87) |
+
+The recommendation is unaffected and slightly strengthened: absolute escape falls
+~2.7x for both pairs because +-1 and +-2 nt are 77% of measured neuronal indels and all
+of them frameshift, and the selected guide sets at every k are identical to baseline.
+The default is retained because it is the more pessimistic of the two, and because the
+measurement is SpCas9 at one human locus in cultured neurons, not SaCas9 in a
+trigeminal ganglion.
+
 ### The escape model cannot choose between these four, and it is important to say so
 
 All four are present in all 183 genomes, so their presence vectors are identical.
