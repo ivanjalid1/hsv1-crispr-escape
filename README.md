@@ -80,8 +80,8 @@ refuted by its own subsequent off-target screening. Both withdrawals are documen
 | Network | needed only by stage 1 and by the gene-corpus half of stage 5. Everything else runs offline from the caches those two populate. |
 
 ```bash
-git clone https://github.com/[GITHUB-USER]/[REPO-NAME].git
-cd [REPO-NAME]
+git clone https://github.com/ivanjalid1/hsv1-crispr-escape.git
+cd hsv1-crispr-escape
 
 python -m venv .venv
 # Windows
@@ -411,9 +411,10 @@ stronger licence.
 `refs/` contains third-party material redistributed under **its own** licences — the
 verbatim CC BY-NC-ND 4.0 full text of Amrani et al. (2024), and a CC BY 4.0 derived
 table from the source data of Ramadoss et al. (2025). The MIT grant does not extend to
-them; see the THIRD-PARTY MATERIAL section at the bottom of [`LICENSE`](LICENSE).
-Sequence data is retrieved at run time from NCBI and Ensembl and is not redistributed
-here.
+them; the full notice is in [`NOTICE.md`](NOTICE.md). It is a separate file because
+GitHub's licence detector only reports **MIT** when `LICENSE` is the unmodified MIT
+text, so the third-party notice cannot live inside it. Sequence data is retrieved at
+run time from NCBI and Ensembl and is not redistributed here.
 
 ---
 
@@ -423,7 +424,8 @@ here.
 run_pipeline.py            single entrypoint: stages 1-4 plus opt-in 5-8, and the run log
 verify.py                  check the headline numbers reproduce (fast path, offline, < 1 s)
 requirements.txt           pinned, installed and tested on CPython 3.14.5
-LICENSE                    MIT, plus the third-party notice for refs/
+LICENSE                    MIT, unmodified so GitHub detects it
+NOTICE.md                  third-party licences covering refs/ (CC BY-NC-ND 4.0, CC BY 4.0)
 CITATION.cff               "Cite this repository"; read by GitHub and by Zenodo
 .zenodo.json               deposition metadata for the archived DOI
 PUBLISH.md                 the author's checklist for the GitHub push and the Zenodo mint
@@ -1300,7 +1302,8 @@ src/figures.py           figures 1-5 (.png and .pdf), rendered from results/
 results/recommendation.md  the reconciled single recommendation across stages 6-8
 results/CHECKSUMS.sha256   SHA-256 of every deterministic output of the pinned run
 requirements.txt         pinned, installed and tested on CPython 3.14.5
-LICENSE                  MIT, plus the third-party notice covering refs/
+LICENSE                  MIT, unmodified so GitHub detects it
+NOTICE.md                third-party licences covering refs/
 CITATION.cff             "Cite this repository"; read by GitHub and by Zenodo
 .zenodo.json             deposition metadata for the archived DOI
 PUBLISH.md               the author's checklist for the GitHub push and Zenodo mint

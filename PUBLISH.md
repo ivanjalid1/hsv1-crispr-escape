@@ -7,8 +7,9 @@ manuscript whose last unresolved citation (`manuscript/manuscript.md:376`) is fi
 Work through it in order. Steps 0–2 happen before anything is public and are the ones
 that are expensive to undo.
 
-Line numbers below were refreshed by the commit that recorded the author identity.
-If a file has been edited since, find the placeholder instead of trusting the number:
+Line numbers below were refreshed by the commit that filled in the repository URL and
+split the third-party notice out of `LICENSE`. If a file has been edited since, find
+the placeholder instead of trusting the number:
 
 ```bash
 grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFILIATION\|\[ORCID\]\|\[GITHUB-USER\]\|\[REPO-NAME\]\|\[BIORXIV-DOI\|\[ZENODO-\|\[YYYY-MM-DD\]" \
@@ -101,10 +102,15 @@ verbatim CC BY-NC-ND copy of it; they are not yours and they are meant to be the
 
 ## Step 1 — Fill the placeholders
 
-Nothing here is guessable, and nothing should be invented. The author identity is now
-filled in everywhere, the ORCID included (1a, 1b). Everything still open — 1c to 1e —
-waits on an identifier that **does not exist yet**: a repository URL, a Zenodo DOI, a
-bioRxiv DOI. Each is filled at the step that creates it.
+Nothing here is guessable, and nothing should be invented. The author identity (1a),
+the ORCID (1b) and the repository URL (1c) are now filled in everywhere. What is still
+open — **1d and 1e only** — waits on an identifier that **does not exist yet**: a
+Zenodo DOI and a bioRxiv DOI. Each is filled at the step that creates it.
+
+| still open | identifier | created by |
+|---|---|---|
+| 1d | Zenodo concept DOI (`10.5281/zenodo.…`) and the release date | Step 4 |
+| 1e | bioRxiv DOI (`10.1101/…`) | Step 6 |
 
 ### 1a. Author identity — **DONE**
 
@@ -114,11 +120,11 @@ re-decided.
 | file:line | field | value now in the file |
 |---|---|---|
 | `LICENSE:3` | copyright holder | `Copyright (c) 2026 Ivan Heredia Jalid` |
-| `CITATION.cff:27` | `given-names` | `Ivan` |
-| `CITATION.cff:28` | `family-names` | `Heredia Jalid` — **one** field, both surnames, no hyphen |
-| `CITATION.cff:29` | `email` | `ivanjalid@gmail.com` |
-| `CITATION.cff:30` | `affiliation` | `Independent Researcher, Córdoba, Argentina` |
-| `CITATION.cff:74-77` | the same four fields inside `preferred-citation` | as above |
+| `CITATION.cff:32` | `given-names` | `Ivan` |
+| `CITATION.cff:33` | `family-names` | `Heredia Jalid` — **one** field, both surnames, no hyphen |
+| `CITATION.cff:34` | `email` | `ivanjalid@gmail.com` |
+| `CITATION.cff:35` | `affiliation` | `Independent Researcher, Córdoba, Argentina` |
+| `CITATION.cff:79-82` | the same four fields inside `preferred-citation` | as above |
 | `.zenodo.json:7` | `creators[0].name` | `Heredia Jalid, Ivan` — Zenodo's **`Family, Given`** order |
 | `.zenodo.json:8` | `creators[0].affiliation` | as above |
 | `manuscript/manuscript.md:3` | author line | `**Ivan Heredia Jalid**` |
@@ -142,8 +148,8 @@ rejects the other's form.**
 
 | file:line | form required | value now in the file |
 |---|---|---|
-| `CITATION.cff:36` | **full URI** | `orcid: "https://orcid.org/0009-0003-6702-1295"` |
-| `CITATION.cff:79` | **full URI**, inside `preferred-citation` | same |
+| `CITATION.cff:40` | **full URI** | `orcid: "https://orcid.org/0009-0003-6702-1295"` |
+| `CITATION.cff:83` | **full URI**, inside `preferred-citation` | same |
 | `.zenodo.json:9` | **bare identifier, no URL** | `"orcid": "0009-0003-6702-1295"` |
 | `manuscript/manuscript.md:7` | bare, after the `ORCID:` label | `ORCID: 0009-0003-6702-1295` |
 | `manuscript/manuscript.md:384` | bare, in Author Contributions | `ORCID 0009-0003-6702-1295` |
@@ -165,23 +171,31 @@ still has no real value to carry.
 
 - [x] 1b done — ORCID registered, verified and filled in all five places
 
-### 1c. Repository URL — fill in Step 3, once the GitHub repository exists
+### 1c. Repository URL — **DONE**
 
-| # | file:line | placeholder |
-|---|---|---|
-| 6 | `CITATION.cff:38` | `repository-code: "https://github.com/[GITHUB-USER]/[REPO-NAME]"` |
-| 7 | `CITATION.cff:39` | `url: "https://github.com/[GITHUB-USER]/[REPO-NAME]"` |
-| 8 | `.zenodo.json:40` | `"identifier": "https://github.com/[GITHUB-USER]/[REPO-NAME]"` |
-| 9 | `README.md:83-84` | `git clone https://github.com/[GITHUB-USER]/[REPO-NAME].git` and `cd [REPO-NAME]` |
+The repository is live at <https://github.com/ivanjalid1/hsv1-crispr-escape>, public,
+with `master` tracking `origin/master`. **The four places do not all want the same
+form** — two schemas want the bare browse URL, the README wants the clone URL:
 
-- [ ] 1c done (Step 3)
+| # | file:line | form required | value now in the file |
+|---|---|---|---|
+| 6 | `CITATION.cff:42` | bare URL, no `.git` (CFF type-checks it as a URI) | `repository-code: "https://github.com/ivanjalid1/hsv1-crispr-escape"` |
+| 7 | `CITATION.cff:43` | bare URL, no `.git` | `url: "https://github.com/ivanjalid1/hsv1-crispr-escape"` |
+| 8 | `.zenodo.json:40` | bare URL — the entry declares `"scheme": "url"`, so a `.git` suffix would be archived as the identifier | `"identifier": "https://github.com/ivanjalid1/hsv1-crispr-escape"` |
+| 9 | `README.md:83-84` | **git clone URL, with `.git`**, and the bare directory name | `git clone https://github.com/ivanjalid1/hsv1-crispr-escape.git` / `cd hsv1-crispr-escape` |
+
+`cffconvert --validate -i CITATION.cff` still reports *"Citation metadata are valid
+according to schema version 1.2.0"* with the URLs live, and the generated BibTeX now
+carries `url = {https://github.com/ivanjalid1/hsv1-crispr-escape}`.
+
+- [x] 1c done — repository created, pushed, and its URL filled in all four places
 
 ### 1d. Release date and Zenodo DOI — fill in Steps 4 and 5
 
 | # | file:line | placeholder |
 |---|---|---|
-| 10 | `CITATION.cff:45` | `# date-released: 2026-01-01` — **uncomment** and set to the release date, `YYYY-MM-DD`. Commented out for the same schema reason as `orcid`. |
-| 11 | `CITATION.cff:50` | `doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"` |
+| 10 | `CITATION.cff:49` | `# date-released: 2026-01-01` — **uncomment** and set to the release date, `YYYY-MM-DD`. Commented out for the same schema reason as `orcid`. |
+| 11 | `CITATION.cff:54` | `doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"` |
 | 12 | `README.md:389` | `doi:` `10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]` |
 | 13 | `manuscript/manuscript.md:376` | the whole `[CITATION NEEDED: …]` bracket |
 
@@ -191,12 +205,53 @@ still has no real value to carry.
 
 | # | file:line | placeholder |
 |---|---|---|
-| 14 | `CITATION.cff:82` | `doi: "10.1101/[BIORXIV-DOI-SUFFIX]"` under `preferred-citation` |
-| 15 | `CITATION.cff:83` | `url: "https://doi.org/10.1101/[BIORXIV-DOI-SUFFIX]"` |
+| 14 | `CITATION.cff:86` | `doi: "10.1101/[BIORXIV-DOI-SUFFIX]"` under `preferred-citation` |
+| 15 | `CITATION.cff:87` | `url: "https://doi.org/10.1101/[BIORXIV-DOI-SUFFIX]"` |
 | 16 | `.zenodo.json:34` | `"identifier": "10.1101/[BIORXIV-DOI-SUFFIX]"` |
 | 17 | `README.md:387` | `doi:` `[BIORXIV-DOI]` under **How to cite** |
 
 - [ ] 1e done (Step 7)
+
+---
+
+## Step 1f — Why `LICENSE` is pristine and `NOTICE.md` exists — **DONE**
+
+GitHub reported the licence as `NOASSERTION`, not `MIT`:
+
+```bash
+gh api repos/ivanjalid1/hsv1-crispr-escape --jq .license.spdx_id   # -> NOASSERTION
+```
+
+The cause was not a wrong licence — it was the shape of the file. GitHub detects
+licences with [`licensee`](https://github.com/licensee/licensee), which only matches a
+file against a known licence when the normalised text is a near-exact match. `LICENSE`
+had a `THIRD-PARTY MATERIAL` section appended to it, and that appended text pushed it
+below the similarity threshold, so licensee refused to name the licence at all.
+
+The fix was to **move, not delete**. `LICENSE` is now the unmodified MIT text and
+nothing else, and the third-party notice — a real licensing constraint on `refs/`,
+covering the CC BY-NC-ND 4.0 Amrani et al. 2024 full text and the CC BY 4.0
+Ramadoss et al. 2025 derived table — now lives verbatim in **[`NOTICE.md`](NOTICE.md)**.
+
+**No pointer line was added to `LICENSE`.** Even one extra sentence risks putting the
+file back below licensee's threshold, and re-breaking detection to gain a cross-
+reference is a bad trade. `NOTICE.md` is instead referenced from three places that are
+read by humans and by machines:
+
+| file | how it points at `NOTICE.md` |
+|---|---|
+| `README.md` (Licence section, and both repository-layout listings) | prose link, with the reason the notice is not inside `LICENSE` |
+| `CITATION.cff` (`message`) | one sentence in the field GitHub shows under "Cite this repository" |
+| `.zenodo.json` (`notes`) | so the Zenodo record carries it too |
+
+If `LICENSE` is ever edited again, re-check detection rather than assuming:
+
+```bash
+gh api repos/ivanjalid1/hsv1-crispr-escape --jq .license.spdx_id   # must print MIT
+```
+
+- [x] `LICENSE` restored to pristine MIT; notice moved verbatim to `NOTICE.md`
+- [x] `spdx_id` confirmed `MIT` against the live API after the push
 
 ---
 
@@ -236,45 +291,42 @@ are gitignored on purpose and the reasoning is in `.gitignore` itself.
 
 ---
 
-## Step 3 — Create the GitHub repository and push
+## Step 3 — Create the GitHub repository and push — **DONE**
 
-Pick a name. Something descriptive and stable, because it becomes part of the citation
-and of the Zenodo record: `hsv1-crispr-conservation`, `hsv1-guide-escape-audit`, or
-similar. Avoid renaming it later.
+The repository exists, is **public**, and the whole history is pushed:
 
-### With the `gh` CLI
+| field | value |
+|---|---|
+| URL | <https://github.com/ivanjalid1/hsv1-crispr-escape> |
+| owner | `ivanjalid1` |
+| visibility | public |
+| default branch | `master`, tracking `origin/master` |
 
-```bash
-gh auth status || gh auth login
+The name is now part of the citation and will be part of the Zenodo record.
+**Do not rename it.** A rename leaves a redirect on GitHub but silently invalidates the
+URL already written into `CITATION.cff`, `.zenodo.json` and the README.
 
-gh repo create <REPO-NAME> \
-  --public \
-  --description "Alignment-free conserved CRISPR-Cas9 guide discovery, multiplex escape modelling and human off-target screening for HSV-1" \
-  --source . \
-  --remote origin \
-  --push
-```
-
-### Or by hand
-
-Create an **empty** public repository at <https://github.com/new> — no README, no
-`.gitignore`, no licence, or the first push will conflict. Then:
+Re-confirm the state at any time:
 
 ```bash
-git remote add origin https://github.com/<user>/<REPO-NAME>.git
-git branch -M main
-git push -u origin main
+gh repo view ivanjalid1/hsv1-crispr-escape --json name,visibility,url,defaultBranchRef
+git status -sb            # expect: ## master...origin/master  (no ahead/behind)
 ```
 
 Then, on the repository page:
 
-- [ ] the "Cite this repository" button appears on the right. This confirms
+- [x] the "Cite this repository" button appears on the right. This confirms
       `CITATION.cff` both parsed as YAML *and* validated against the CFF schema. If it
-      does not appear, the usual cause is a placeholder left in a field the schema
+      ever stops appearing, the usual cause is a placeholder left in a field the schema
       type-checks — `orcid` and `date-released` are the two that bite, which is why
-      both ship commented out. Paste the file into <https://citation-file-format.github.io/cff-initializer-javascript/>
+      `date-released` still ships commented out. Paste the file into
+      <https://citation-file-format.github.io/cff-initializer-javascript/>
       to see the actual error.
-- [ ] the licence is detected as **MIT** in the sidebar
+- [x] the licence is detected as **MIT** in the sidebar. This did **not** work on the
+      first push — it read "Other" / `NOASSERTION` — and was fixed by making `LICENSE`
+      a pristine MIT text and moving the third-party notice to `NOTICE.md`. The full
+      reasoning is in **Step 1f** above. Verify it from the API, not by eye:
+      `gh api repos/ivanjalid1/hsv1-crispr-escape --jq .license.spdx_id` → `MIT`.
 - [ ] set the About description and topics: `crispr`, `cas9`, `hsv-1`, `guide-rna`,
       `bioinformatics`, `reproducible-research`
 - [ ] Settings → General → Features: turn **Issues** on. A reviewer with a question
@@ -282,20 +334,40 @@ Then, on the repository page:
 
 ---
 
-## Step 4 — Connect Zenodo and mint the DOI
+## Step 4 — Connect Zenodo and mint the DOI ← **YOU ARE HERE**
 
-**Order matters. Zenodo only archives releases created *after* the repository is
-switched on, so this step must come before the release.**
+Everything Zenodo needs from the repository is now in place: the repository is public
+(Step 3), `.zenodo.json` and `CITATION.cff` are committed with the author, the ORCID
+and the repository URL all filled (Steps 1a–1c), and both files validate. **The only
+things still missing from this project are the two DOIs, and only Zenodo and bioRxiv
+can create them.** Nothing further can be filled in locally until this step is run.
+
+The next action is a browser action, and only you can take it: it needs your Zenodo
+login and an OAuth authorisation that no local tool can perform. Then one tag.
+
+**Order matters. Zenodo only archives releases created *after* the repository toggle
+is switched on, so the OAuth link and the toggle must both come before the tag.** A
+release cut first is not archived, and the fix is to delete the release and redo it.
 
 1. Sign in at <https://zenodo.org> **with GitHub** (Log in → GitHub), and authorise
    the `admin:repo_hook` and `read:org` scopes it asks for.
-2. Go to <https://zenodo.org/account/settings/github/>. Click **Sync now** if the new
-   repository is not listed.
-3. Flip the toggle **ON** for `<user>/<REPO-NAME>`.
-4. Confirm `.zenodo.json` is committed. Its ORCID is filled (Step 1b); its repository
-   URL placeholder (Step 1c) must be filled before this step, or the deposition fails.
-   Zenodo reads this file at release time; if the ORCID or an identifier is malformed
-   the deposition fails and you will have to delete the release and redo it.
+2. Go to <https://zenodo.org/account/settings/github/>. The repository is already
+   public, so it should be listed; click **Sync now** if it is not.
+3. Flip the toggle **ON** for **`ivanjalid1/hsv1-crispr-escape`**.
+4. `.zenodo.json` is committed and its repository-URL placeholder is filled — nothing
+   to do here beyond confirming it, because Zenodo reads this file at release time and
+   a malformed ORCID or identifier makes the deposition fail, after which you have to
+   delete the release and redo it. To re-check before tagging:
+
+   ```bash
+   python -c "import json;json.load(open('.zenodo.json',encoding='utf-8'));print('ok')"
+   git status --short          # expect empty: .zenodo.json must be committed, not just saved
+   ```
+
+   Note that `CITATION.cff` still carries the `10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]`
+   placeholder at this point. **That is correct and expected** — it is a chicken-and-egg
+   field, filled in Step 5 from the DOI this step mints. Do not invent a value to make
+   it look finished.
 5. Create the release:
 
 ```bash
@@ -398,17 +470,25 @@ gh release create v1.1.0 --title "v1.1.0 — preprint linked" --notes "Citation 
 
 ```bash
 grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFILIATION\|\[ORCID\]\|\[GITHUB-USER\]\|\[REPO-NAME\]\|\[BIORXIV-DOI\|\[ZENODO-\|\[YYYY-MM-DD\]\|CITATION NEEDED" \
-  README.md LICENSE CITATION.cff .zenodo.json PUBLISH.md manuscript/
+  README.md LICENSE NOTICE.md CITATION.cff .zenodo.json PUBLISH.md manuscript/
 ```
 
 The author-identity placeholders — `[AUTHOR NAME]`, `[AUTHOR GIVEN NAME]`,
-`[AUTHOR FAMILY NAME]`, `[AFFILIATION …]` — and `[ORCID]` are gone, and must never
-come back; they are kept in the pattern above purely as a regression check. What that
-grep still returns, correctly, is `[GITHUB-USER]` / `[REPO-NAME]` (Step 1c),
-`[ZENODO-CONCEPT-RECORD-ID]` and the `CITATION NEEDED` bracket (Step 1d), and
-`[BIORXIV-DOI…]` (Step 1e) — plus `PUBLISH.md` itself and the two `references.md`
-lines that *describe* the placeholder convention. When it returns nothing but those
-last two, the repository is fully filled in.
+`[AUTHOR FAMILY NAME]`, `[AFFILIATION …]` — and `[ORCID]` are gone, and so now are
+`[GITHUB-USER]` and `[REPO-NAME]`. None of them must ever come back; they are kept in
+the pattern above purely as a regression check.
+
+**Exactly two identifiers remain unfilled, in six places, and both are waiting on an
+external service:**
+
+| what | where it still appears | filled by |
+|---|---|---|
+| Zenodo concept DOI + release date | `CITATION.cff:49`, `CITATION.cff:54`, `README.md:389`, `manuscript/manuscript.md:376` | Step 5, from the DOI Step 4 mints |
+| bioRxiv DOI | `CITATION.cff:86`, `CITATION.cff:87`, `.zenodo.json:34`, `README.md:387` | Step 7, from the DOI Step 6 receives |
+
+Everything else that grep returns is `PUBLISH.md` itself and the two `references.md`
+lines that *describe* the placeholder convention. When it returns nothing but those,
+the repository is fully filled in.
 
 **Never invent a DOI or a URL to make the grep quiet.** A visible placeholder is
 correct; a plausible-looking fabricated identifier is a catastrophic failure, for

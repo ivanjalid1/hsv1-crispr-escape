@@ -37,7 +37,7 @@
       "scheme": "doi"
     },
     {
-      "identifier": "https://github.com/[GITHUB-USER]/[REPO-NAME]",
+      "identifier": "https://github.com/ivanjalid1/hsv1-crispr-escape",
       "relation": "isSupplementTo",
       "resource_type": "software",
       "scheme": "url"
@@ -61,5 +61,5 @@
       "scheme": "doi"
     }
   ],
-  "notes": "Input sequence data is not redistributed here: it is retrieved at run time from NCBI Nucleotide and Ensembl. The pinned provenance record for the run reported in the preprint is data/manifest.tsv (per-genome accession, length, ambiguous-base count, metadata and SHA-256, plus the exact Entrez query and UTC retrieval timestamp) together with results/run_log.json. Re-running the retrieval at a later date will return MORE than 183 genomes as GenBank grows, and the numbers will move; results are pinned to the retrieval date, not to the query. refs/ contains third-party material redistributed under its own licences (CC BY-NC-ND 4.0 and CC BY 4.0) - see the THIRD-PARTY MATERIAL section of LICENSE."
+  "notes": "Input sequence data is not redistributed here: it is retrieved at run time from NCBI Nucleotide and Ensembl. The pinned provenance record for the run reported in the preprint is data/manifest.tsv (per-genome accession, length, ambiguous-base count, metadata and SHA-256, plus the exact Entrez query and UTC retrieval timestamp) together with results/run_log.json. Re-running the retrieval at a later date will return MORE than 183 genomes as GenBank grows, and the numbers will move; results are pinned to the retrieval date, not to the query. refs/ contains third-party material redistributed under its own licences (CC BY-NC-ND 4.0 and CC BY 4.0) and is not covered by the MIT licence - see NOTICE.md."
 }
