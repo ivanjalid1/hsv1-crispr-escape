@@ -1,5 +1,7 @@
 # Conserved CRISPR-Cas9 target sites in HSV-1
 
+[![DOI](https://zenodo.org/badge/1361724608.svg)](https://doi.org/10.5281/zenodo.22664837)
+
 **Analysis code and archived results for the preprint *"What a genome corpus can and
 cannot certify about CRISPR antiviral escape: resolution floors, joint coverage, and a
 worked audit of an HSV-1 guide pair"*.**
@@ -386,13 +388,16 @@ Please cite **both** the preprint and the archived software release.
   antiviral escape: resolution floors, joint coverage, and a worked audit of an HSV-1
   guide pair.* bioRxiv (2026). doi:`[BIORXIV-DOI]`
 * **Software** — Ivan Heredia Jalid. *Conserved CRISPR-Cas9 target sites in HSV-1* (version
-  1.0.0). Zenodo (2026). doi:`10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]`
+  1.0.0). Zenodo (2026). doi:`10.5281/zenodo.22664837` —
+  <https://doi.org/10.5281/zenodo.22664837>. This is the **concept DOI**: it always
+  resolves to the most recent archived version. Zenodo also mints a version-specific
+  DOI for each release; cite the concept DOI unless you need to pin a single version.
 
 GitHub renders [`CITATION.cff`](CITATION.cff) as a "Cite this repository" button that
 emits both, and Zenodo reads [`CITATION.cff`](CITATION.cff) and
-[`.zenodo.json`](.zenodo.json) when minting the DOI from a release tag. The DOI and
-preprint placeholders in those two files, in `manuscript/manuscript.md` and above are
-filled in at deposition; the checklist is [`PUBLISH.md`](PUBLISH.md).
+[`.zenodo.json`](.zenodo.json) when minting the DOI from a release tag. The Zenodo DOI
+is now filled in everywhere; the only placeholder left is the bioRxiv DOI above, which
+is filled once the preprint is posted. The checklist is [`PUBLISH.md`](PUBLISH.md).
 
 If you use only the escape model or only the off-target scanner, please still cite the
 preprint — the arguments they implement are what make the numbers interpretable.

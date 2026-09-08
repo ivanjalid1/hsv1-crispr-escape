@@ -24,9 +24,9 @@ type: software
 
 # ---------------------------------------------------------------------------
 # Author identity, including the ORCID, is final (see PUBLISH.md Step 0). The
-# placeholders that remain below -- the repository URL and the Zenodo/bioRxiv
-# DOIs -- are for identifiers that do not exist yet and must NOT be invented.
-# See PUBLISH.md.
+# repository URL and the Zenodo concept DOI are now filled in. The only
+# placeholder left below is the bioRxiv DOI, for a preprint that is not yet
+# posted; it must NOT be invented. See PUBLISH.md.
 # ---------------------------------------------------------------------------
 authors:
   - given-names: "Ivan"
@@ -43,15 +43,15 @@ repository-code: "https://github.com/ivanjalid1/hsv1-crispr-escape"
 url: "https://github.com/ivanjalid1/hsv1-crispr-escape"
 license: MIT
 version: "1.0.0"
-# Uncomment and set to the date of the release, in YYYY-MM-DD form. There is no
-# release yet, and the schema type-checks this as a date, so a placeholder here
-# would invalidate the whole file -- hence commented out rather than filled.
-# date-released: 2026-01-01
+# The date of the v1.0.0 release, in YYYY-MM-DD form. Live now that the release
+# exists; it shipped commented out only because the schema type-checks this as a
+# date and a placeholder would have invalidated the whole file.
+date-released: 2026-09-08
 
 # The Zenodo DOI minted from the release tag. Zenodo reads this file, so this
 # field must be the CONCEPT DOI (the one that always resolves to the latest
-# version), not a version-specific DOI.
-doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"
+# version), not the version-specific DOI Zenodo also mints for each release.
+doi: "10.5281/zenodo.22664837"
 
 keywords:
   - CRISPR

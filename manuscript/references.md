@@ -7,8 +7,8 @@ where it is not the publisher page itself.
 
 **No reference in this list was reconstructed from memory.** A visible
 `[CITATION NEEDED]` placeholder is correct; a plausible-looking fabricated reference
-would be a catastrophic failure. One placeholder remains in `manuscript.md`
-(see the checklist below) and is a deliberate, non-literature blocker.
+would be a catastrophic failure. **No `[CITATION NEEDED]` placeholder remains in
+`manuscript.md`**; all fourteen catalogued below are resolved.
 
 In-text citation style is author–year, matching the manuscript throughout.
 
@@ -58,31 +58,37 @@ Listed alphabetically by first author.
    Interpreting zero numerators. *JAMA* 1983;249(13):1743–1745.
    doi:10.1001/jama.1983.03330370053031. PMID 6827763.
 
-10. **Hsu PD, Scott DA, Weinstein JA, Ran FA, Konermann S, Agarwala V, Li Y, Fine EJ,
+10. **Heredia Jalid I.** Conserved CRISPR-Cas9 target sites in HSV-1: alignment-free
+    conservation, multiplex escape modelling and human off-target screening
+    (version 1.0.0) [software]. *Zenodo* 2026. doi:10.5281/zenodo.22664837.
+    Concept DOI, which always resolves to the most recent archived version.
+    Source repository: https://github.com/ivanjalid1/hsv1-crispr-escape
+
+11. **Hsu PD, Scott DA, Weinstein JA, Ran FA, Konermann S, Agarwala V, Li Y, Fine EJ,
     Wu X, Shalem O, Cradick TJ, Marraffini LA, Bao G, Zhang F.** DNA targeting
     specificity of RNA-guided Cas9 nucleases. *Nature Biotechnology*
     2013;31(9):827–832. doi:10.1038/nbt.2647. PMID 23873081.
 
-11. **James C, Harfouche M, Welton NJ, Turner KM, Abu-Raddad LJ, Gottlieb SL,
+12. **James C, Harfouche M, Welton NJ, Turner KM, Abu-Raddad LJ, Gottlieb SL,
     Looker KJ.** Herpes simplex virus: global infection prevalence and incidence
     estimates, 2016. *Bulletin of the World Health Organization* 2020;98(5):315–329.
     doi:10.2471/BLT.19.237149. PMID 32514197.
 
-12. **Lin Y, Cradick TJ, Brown MT, Deshmukh H, Ranjan P, Sarode N, Wile BM, Vertino PM,
+13. **Lin Y, Cradick TJ, Brown MT, Deshmukh H, Ranjan P, Sarode N, Wile BM, Vertino PM,
     Stewart FJ, Bao G.** CRISPR/Cas9 systems have off-target activity with insertions
     or deletions between target DNA and guide RNA sequences. *Nucleic Acids Research*
     2014;42(11):7473–7485. doi:10.1093/nar/gku402. PMID 24838573.
 
-13. **Metsky HC, Welch NL, Pillai PP, Haradhvala NJ, Rumker L, Mantena S, Zhang YB,
+14. **Metsky HC, Welch NL, Pillai PP, Haradhvala NJ, Rumker L, Mantena S, Zhang YB,
     Yang DK, Ackerman CM, Weller J, Blainey PC, Myhrvold C, Mitzenmacher M,
     Sabeti PC.** Designing sensitive viral diagnostics with machine learning.
     *Nature Biotechnology* 2022;40:1123–1131. doi:10.1038/s41587-022-01213-5
 
-14. **Ondov BD, Treangen TJ, Melsted P, Mallonee AB, Bergman NH, Koren S,
+15. **Ondov BD, Treangen TJ, Melsted P, Mallonee AB, Bergman NH, Koren S,
     Phillippy AM.** Mash: fast genome and metagenome distance estimation using MinHash.
     *Genome Biology* 2016;17(1):132. doi:10.1186/s13059-016-0997-x. PMID 27323842.
 
-15. **Ramadoss GN, Namaganda SJ, Kumar MM, Hamilton JR, Sharma R, Chow KG, Workley LA,
+16. **Ramadoss GN, Namaganda SJ, Kumar MM, Hamilton JR, Sharma R, Chow KG, Workley LA,
     Macklin BL, Sun M, Ha AS, Liu JC, Fellmann C, Watry HL, Dierks PH, Bose RS, Jin J,
     Perez BS, Sandoval Espinoza CR, Matia MP, Lu SH, Judge LM, Shy BR, Nussenzweig A,
     Adamson B, Murthy N, Doudna JA, Kampmann M, Conklin BR.** Characterizing and
@@ -93,42 +99,42 @@ Listed alphabetically by first author.
     Source data (the authors' own Data Availability statement): FigShare article
     30366298, doi:10.6084/m9.figshare.30366298.v1 (published 2025-10-15)
 
-16. **Ran FA, Cong L, Yan WX, Scott DA, Gootenberg JS, Kriz AJ, Zetsche B, Shalem O,
+17. **Ran FA, Cong L, Yan WX, Scott DA, Gootenberg JS, Kriz AJ, Zetsche B, Shalem O,
     Wu X, Makarova KS, Koonin EV, Sharp PA, Zhang F.** In vivo genome editing using
     *Staphylococcus aureus* Cas9. *Nature* 2015;520(7546):186–191.
     doi:10.1038/nature14299. PMID 25830891; PMCID PMC4393360.
 
-17. **Sfeir A, Symington LS.** Microhomology-mediated end joining: a back-up survival
+18. **Sfeir A, Symington LS.** Microhomology-mediated end joining: a back-up survival
     mechanism or dedicated pathway? *Trends in Biochemical Sciences*
     2015;40(11):701–714. doi:10.1016/j.tibs.2015.08.006. PMID 26439531.
 
-18. **Tsai SQ, Zheng Z, Nguyen NT, Liebers M, Topkar VV, Thapar V, Wyvekens N,
+19. **Tsai SQ, Zheng Z, Nguyen NT, Liebers M, Topkar VV, Thapar V, Wyvekens N,
     Khayter C, Iafrate AJ, Le LP, Aryee MJ, Joung JK.** GUIDE-seq enables genome-wide
     profiling of off-target cleavage by CRISPR-Cas nucleases. *Nature Biotechnology*
     2015;33(2):187–197. doi:10.1038/nbt.3117. PMID 25513782.
 
-19. **van Overbeek M, Capurso D, Carter MM, Thompson MS, Frias E, Russ C,
+20. **van Overbeek M, Capurso D, Carter MM, Thompson MS, Frias E, Russ C,
     Reece-Hoyes JS, Nye C, Gradia S, Vidal B, Zheng J, Hoffman GR, Fuller CK,
     May AP.** DNA repair profiling reveals nonrandom outcomes at Cas9-mediated breaks.
     *Molecular Cell* 2016;63(4):633–646. doi:10.1016/j.molcel.2016.06.037.
     PMID 27499295.
 
-20. **Wang G, Zhao N, Berkhout B, Das AT.** CRISPR-Cas9 can inhibit HIV-1 replication
+21. **Wang G, Zhao N, Berkhout B, Das AT.** CRISPR-Cas9 can inhibit HIV-1 replication
     but NHEJ repair facilitates virus escape. *Cell Reports* 2016;15:481–489.
     doi:10.1016/j.celrep.2016.03.042
 
-21. **Wei A, Yin D, Zhai Z, Ling S, Le H, Tian L, Xu J, Paludan SR, Cai Y, Hong J.**
+22. **Wei A, Yin D, Zhai Z, Ling S, Le H, Tian L, Xu J, Paludan SR, Cai Y, Hong J.**
     In vivo CRISPR gene editing in patients with herpetic stromal keratitis.
     *Molecular Therapy* 2023;31(11):3163–3175. doi:10.1016/j.ymthe.2023.08.021.
     PMID 37658603.
 
-22. **Yates AD, Austine-Orimoloye O, Azov AG, Barba M, Barnes I, Barrera-Enriquez VP,
+23. **Yates AD, Austine-Orimoloye O, Azov AG, Barba M, Barnes I, Barrera-Enriquez VP,
     et al.** Ensembl 2026. *Nucleic Acids Research* 2026;54(D1):D1053–D1060.
     doi:10.1093/nar/gkaf1239. PMID 41296548.
     (Author list truncated at six per journal convention; the full list is on the
     publisher record.)
 
-23. **Yin D, Ling S, Wang D, Dai Y, Jiang H, Zhou X, Paludan SR, Hong J, Cai Y.**
+24. **Yin D, Ling S, Wang D, Dai Y, Jiang H, Zhou X, Paludan SR, Hong J, Cai Y.**
     Targeting herpes simplex virus with CRISPR-Cas9 cures herpetic stromal keratitis
     in mice. *Nature Biotechnology* 2021;39(5):567–577.
     doi:10.1038/s41587-020-00781-8. PMID 33432198.
@@ -172,6 +178,13 @@ Listed alphabetically by first author.
   *minimal* type-3 Pol III termination signal and termination becomes efficient only at
   T₆ or longer. The manuscript now states this rather than the flat "terminates at
   ≥ 4 T", and frames the `TTTT` exclusion as a conservative design choice.
+- **Heredia Jalid 2026** is this manuscript's own analysis code and archived results,
+  deposited on Zenodo from the tagged GitHub release and cited in Section 7 (Data and
+  Code Availability) so that the reproducibility argument in Sections 5 and 7 points at
+  a citable, immutable record rather than at a moving branch. The DOI given is the
+  **concept** DOI, which always resolves to the most recent archived version; Zenodo
+  also mints a version-specific DOI per release, which is deliberately not the one
+  cited. The release reported in the manuscript is v1.0.0.
 - **Lin et al. 2014** supports only the statement that Cas9 has measurable off-target
   activity at sites carrying a DNA or RNA bulge, i.e. that a bulge-tolerant search is
   addressing a real phenomenon.
@@ -223,9 +236,9 @@ Listed alphabetically by first author.
 
 ## Checklist of `[CITATION NEEDED]` placeholders
 
-Fourteen placeholders were catalogued. **Thirteen are now RESOLVED; one remains and is
-a deliberate submission blocker rather than a literature gap.** Listed in the original
-order of appearance.
+Fourteen placeholders were catalogued. **All fourteen are now RESOLVED.** The last of
+them was not a literature gap but a deposition blocker, closed by archiving the code
+(item 14). Listed in the original order of appearance.
 
 ### Introduction (Section 1)
 
@@ -329,11 +342,15 @@ order of appearance.
 ### Data and Code Availability (Section 7)
 
 14. **Public repository URL and archived DOI (e.g. Zenodo) for the analysis code.**
-    **UNRESOLVED — NOT A LITERATURE CITATION.** This cannot be filled by literature
-    search; it requires the author to deposit the repository and mint an archival DOI.
-    **This remains a hard submission blocker**, because the reproducibility argument in
-    Sections 5 and 7 depends on the code being publicly available. The placeholder is
-    deliberately left in place.
+    **RESOLVED — NOT A LITERATURE CITATION.** It could not be filled by literature
+    search; it required the author to publish the repository and mint an archival DOI,
+    which has now been done. The code is public at
+    https://github.com/ivanjalid1/hsv1-crispr-escape and archived at Zenodo as
+    Heredia Jalid 2026 (reference 10 above), doi:10.5281/zenodo.22664837 — the concept
+    DOI, which always resolves to the most recent archived version; the release cited
+    is v1.0.0. Section 7 now carries both, so the reproducibility argument in
+    Sections 5 and 7 rests on a citable, immutable record. The submission blocker is
+    cleared.
 
 ---
 

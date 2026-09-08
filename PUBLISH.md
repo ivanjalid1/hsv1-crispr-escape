@@ -3,13 +3,15 @@
 This is the author's checklist. It goes from a local repository with no remote to a
 public GitHub repository, an archived Zenodo record with a citable DOI, and a
 manuscript whose last unresolved citation (`manuscript/manuscript.md:376`) is filled.
+Steps 0-5 are done. **The only identifier still missing anywhere in this repository is
+the bioRxiv DOI**, and only bioRxiv can create it (Steps 6-7).
 
 Work through it in order. Steps 0–2 happen before anything is public and are the ones
 that are expensive to undo.
 
-Line numbers below were refreshed by the commit that filled in the repository URL and
-split the third-party notice out of `LICENSE`. If a file has been edited since, find
-the placeholder instead of trusting the number:
+Line numbers below were refreshed by the commit that recorded the Zenodo DOI (Steps 4
+and 5). If a file has been edited since, find the placeholder instead of trusting the
+number:
 
 ```bash
 grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFILIATION\|\[ORCID\]\|\[GITHUB-USER\]\|\[REPO-NAME\]\|\[BIORXIV-DOI\|\[ZENODO-\|\[YYYY-MM-DD\]" \
@@ -104,12 +106,12 @@ verbatim CC BY-NC-ND copy of it; they are not yours and they are meant to be the
 
 Nothing here is guessable, and nothing should be invented. The author identity (1a),
 the ORCID (1b) and the repository URL (1c) are now filled in everywhere. What is still
-open — **1d and 1e only** — waits on an identifier that **does not exist yet**: a
-Zenodo DOI and a bioRxiv DOI. Each is filled at the step that creates it.
+open — **1e only** — waits on an identifier that **does not exist yet**: the bioRxiv
+DOI. It is filled at the step that creates it.
 
 | still open | identifier | created by |
 |---|---|---|
-| 1d | Zenodo concept DOI (`10.5281/zenodo.…`) and the release date | Step 4 |
+| ~~1d~~ | ~~Zenodo concept DOI and release date~~ — **DONE**, Steps 4-5 | Step 4 |
 | 1e | bioRxiv DOI (`10.1101/…`) | Step 6 |
 
 ### 1a. Author identity — **DONE**
@@ -131,7 +133,7 @@ re-decided.
 | `manuscript/manuscript.md:5` | affiliation | `Independent Researcher, Córdoba, Argentina` |
 | `manuscript/manuscript.md:9` | correspondence | `Correspondence: Ivan Heredia Jalid <ivanjalid@gmail.com>` — published deliberately |
 | `manuscript/manuscript.md:384` | Author Contributions | name, affiliation and ORCID |
-| `README.md:385,388` | the two **How to cite** entries | `Ivan Heredia Jalid` |
+| `README.md:387,390` | the two **How to cite** entries | `Ivan Heredia Jalid` |
 
 Section 9 of the manuscript, Competing Interests, needed no edit: it already declares
 no competing interests for "the author" without naming them.
@@ -166,8 +168,8 @@ That check also confirms the two-surname handling survives the round trip: the
 generated BibTeX is `author = {Heredia Jalid, Ivan}` and the APA form is
 `Heredia Jalid I.`, with the surname intact rather than split.
 
-`date-released` stays commented out. There is no release yet, and unlike `orcid` it
-still has no real value to carry.
+`date-released` was commented out for the same reason and is now live at
+`CITATION.cff:49` — see 1d below.
 
 - [x] 1b done — ORCID registered, verified and filled in all five places
 
@@ -182,7 +184,7 @@ form** — two schemas want the bare browse URL, the README wants the clone URL:
 | 6 | `CITATION.cff:42` | bare URL, no `.git` (CFF type-checks it as a URI) | `repository-code: "https://github.com/ivanjalid1/hsv1-crispr-escape"` |
 | 7 | `CITATION.cff:43` | bare URL, no `.git` | `url: "https://github.com/ivanjalid1/hsv1-crispr-escape"` |
 | 8 | `.zenodo.json:40` | bare URL — the entry declares `"scheme": "url"`, so a `.git` suffix would be archived as the identifier | `"identifier": "https://github.com/ivanjalid1/hsv1-crispr-escape"` |
-| 9 | `README.md:83-84` | **git clone URL, with `.git`**, and the bare directory name | `git clone https://github.com/ivanjalid1/hsv1-crispr-escape.git` / `cd hsv1-crispr-escape` |
+| 9 | `README.md:85-86` | **git clone URL, with `.git`**, and the bare directory name | `git clone https://github.com/ivanjalid1/hsv1-crispr-escape.git` / `cd hsv1-crispr-escape` |
 
 `cffconvert --validate -i CITATION.cff` still reports *"Citation metadata are valid
 according to schema version 1.2.0"* with the URLs live, and the generated BibTeX now
@@ -190,25 +192,54 @@ carries `url = {https://github.com/ivanjalid1/hsv1-crispr-escape}`.
 
 - [x] 1c done — repository created, pushed, and its URL filled in all four places
 
-### 1d. Release date and Zenodo DOI — fill in Steps 4 and 5
+### 1d. Release date and Zenodo DOI — **DONE**
 
-| # | file:line | placeholder |
+The record is live. **Zenodo minted two DOIs and they are not interchangeable:**
+
+| DOI | what it is | where it belongs |
 |---|---|---|
-| 10 | `CITATION.cff:49` | `# date-released: 2026-01-01` — **uncomment** and set to the release date, `YYYY-MM-DD`. Commented out for the same schema reason as `orcid`. |
-| 11 | `CITATION.cff:54` | `doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"` |
-| 12 | `README.md:389` | `doi:` `10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]` |
-| 13 | `manuscript/manuscript.md:376` | the whole `[CITATION NEEDED: …]` bracket |
+| **`10.5281/zenodo.22664837`** | **CONCEPT DOI** — the parent record; always resolves to the newest version | **everywhere**: `CITATION.cff`, the README badge and citation, the manuscript, `references.md` |
+| `10.5281/zenodo.22664838` | version DOI — pinned to `v1.0.0` alone | nowhere in this repository. Use it only if a field ever asks specifically for a version-pinned identifier |
 
-- [ ] 1d done (Steps 4-5)
+Verified against the API rather than the UI: `https://zenodo.org/api/records/22664838`
+reports `conceptdoi: 10.5281/zenodo.22664837` and `conceptrecid: 22664837`.
+**Zenodo's own GitHub settings page displays the *version* DOI in the repository row.**
+That is the trap; the row is not the citation. Re-check at any time:
+
+```bash
+curl -s https://zenodo.org/api/records/22664838 | python -c "import json,sys;d=json.load(sys.stdin);print(d['conceptdoi'],d['doi'])"
+
+# The version DOI must appear in no file but this one, which records it on purpose.
+git ls-files -z | xargs -0 grep -ln "zenodo.22664838" | grep -v '^PUBLISH.md$'
+```
+
+Where the concept DOI now is, and in which form — **the forms differ and are not
+interchangeable either**:
+
+| # | file:line | form | value now in the file |
+|---|---|---|---|
+| 10 | `CITATION.cff:49` | bare date, uncommented | `date-released: 2026-09-08` |
+| 11 | `CITATION.cff:54` | **bare DOI string**, no `https://doi.org/` prefix (CFF's `doi` field is type-checked as a DOI, not a URL) | `doi: "10.5281/zenodo.22664837"` |
+| 12 | `README.md:3` | **badge**, Markdown image link, target = concept DOI | `[![DOI](https://zenodo.org/badge/1361724608.svg)](https://doi.org/10.5281/zenodo.22664837)` |
+| 13 | `README.md:391-392` | bare DOI in the `doi:` entry, plus the resolvable URL | `doi:` `10.5281/zenodo.22664837` — <https://doi.org/10.5281/zenodo.22664837> |
+| 14 | `manuscript/manuscript.md:376` | prose: repository URL, bare DOI **and** the resolvable `https://doi.org/…` URL; the `[CITATION NEEDED]` bracket is gone | see Step 5 |
+| 15 | `manuscript/references.md:61-65` | full software-citation entry (author, title, version, `[software]`, publisher Zenodo, year, DOI, repository) | reference 10, `Heredia Jalid I.` |
+| 16 | `manuscript/references.md:344-352` | checklist item 14, flipped `UNRESOLVED` → `RESOLVED` | — |
+
+`cffconvert --validate -i CITATION.cff` reports *"Citation metadata are valid according
+to schema version 1.2.0"* with both fields live, and the generated BibTeX carries
+`doi = {10.5281/zenodo.22664837}`.
+
+- [x] 1d done (Steps 4-5)
 
 ### 1e. bioRxiv DOI — fill in Step 7, once the preprint is posted
 
 | # | file:line | placeholder |
 |---|---|---|
-| 14 | `CITATION.cff:86` | `doi: "10.1101/[BIORXIV-DOI-SUFFIX]"` under `preferred-citation` |
-| 15 | `CITATION.cff:87` | `url: "https://doi.org/10.1101/[BIORXIV-DOI-SUFFIX]"` |
-| 16 | `.zenodo.json:34` | `"identifier": "10.1101/[BIORXIV-DOI-SUFFIX]"` |
-| 17 | `README.md:387` | `doi:` `[BIORXIV-DOI]` under **How to cite** |
+| 17 | `CITATION.cff:86` | `doi: "10.1101/[BIORXIV-DOI-SUFFIX]"` under `preferred-citation` |
+| 18 | `CITATION.cff:87` | `url: "https://doi.org/10.1101/[BIORXIV-DOI-SUFFIX]"` |
+| 19 | `.zenodo.json:34` | `"identifier": "10.1101/[BIORXIV-DOI-SUFFIX]"` |
+| 20 | `README.md:389` | `doi:` `[BIORXIV-DOI]` under **How to cite** |
 
 - [ ] 1e done (Step 7)
 
@@ -334,16 +365,29 @@ Then, on the repository page:
 
 ---
 
-## Step 4 — Connect Zenodo and mint the DOI ← **YOU ARE HERE**
+## Step 4 — Connect Zenodo and mint the DOI — **DONE**
 
-Everything Zenodo needs from the repository is now in place: the repository is public
-(Step 3), `.zenodo.json` and `CITATION.cff` are committed with the author, the ORCID
-and the repository URL all filled (Steps 1a–1c), and both files validate. **The only
-things still missing from this project are the two DOIs, and only Zenodo and bioRxiv
-can create them.** Nothing further can be filled in locally until this step is run.
+Done. The Zenodo GitHub integration was enabled first, `v1.0.0` was tagged, pushed and
+released, and Zenodo archived it and minted the DOIs. **The only identifier still
+missing from this project is the bioRxiv DOI, and only bioRxiv can create it.**
 
-The next action is a browser action, and only you can take it: it needs your Zenodo
-login and an OAuth authorisation that no local tool can perform. Then one tag.
+The record and its two DOIs:
+
+| field | value |
+|---|---|
+| concept record | `22664837` — **concept DOI `10.5281/zenodo.22664837`** |
+| v1.0.0 record | `22664838` — version DOI `10.5281/zenodo.22664838` |
+| release date | 2026-09-08 |
+| badge | `https://zenodo.org/badge/1361724608.svg` |
+
+**Use the concept DOI.** It is the one in the paper, the citation metadata, the README
+badge and `references.md`. The version DOI appears nowhere in this repository and
+should stay that way unless some future field asks specifically for a version-pinned
+identifier. See 1d above for how each was verified, and for the trap where Zenodo's own
+GitHub settings page shows the *version* DOI in the repository row.
+
+The steps below are kept as the record of what was done, in case a later release has to
+repeat them.
 
 **Order matters. Zenodo only archives releases created *after* the repository toggle
 is switched on, so the OAuth link and the toggle must both come before the tag.** A
@@ -364,10 +408,10 @@ release cut first is not archived, and the fix is to delete the release and redo
    git status --short          # expect empty: .zenodo.json must be committed, not just saved
    ```
 
-   Note that `CITATION.cff` still carries the `10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]`
-   placeholder at this point. **That is correct and expected** — it is a chicken-and-egg
-   field, filled in Step 5 from the DOI this step mints. Do not invent a value to make
-   it look finished.
+   Note that at this point in the sequence `CITATION.cff` still carried its
+   `10.5281/zenodo.[…]` placeholder. **That was correct and expected** — it is a
+   chicken-and-egg field, filled in Step 5 from the DOI this step mints. It must never
+   be given an invented value to make it look finished. It is filled now.
 5. Create the release:
 
 ```bash
@@ -390,51 +434,51 @@ gh release create v1.0.0 \
 
    The record page shows the concept DOI as "Cite all versions". Take that one.
 
-- [ ] Zenodo GitHub integration enabled **before** the release
-- [ ] `v1.0.0` tagged, pushed and released
-- [ ] Zenodo record exists and its metadata is correct
-- [ ] concept DOI recorded: `10.5281/zenodo.__________`
+- [x] Zenodo GitHub integration enabled **before** the release
+- [x] `v1.0.0` tagged, pushed and released
+- [x] Zenodo record exists and its metadata is correct
+- [x] concept DOI recorded: `10.5281/zenodo.22664837`
+- [x] version DOI recorded and deliberately unused: `10.5281/zenodo.22664838`
 
 ---
 
-## Step 5 — Feed the DOI back into the repository and the manuscript
+## Step 5 — Feed the DOI back into the repository and the manuscript — **DONE**
 
-Fill the Step 1d placeholders (10–13), then commit and push. This is the step that
-closes the manuscript's last open citation.
+The Step 1d placeholders (10–16) are filled and pushed. This is the step that closed the
+manuscript's last open citation: **`manuscript/manuscript.md` now contains zero
+`[CITATION NEEDED]` brackets.**
 
-`manuscript/manuscript.md:376` currently reads:
+`manuscript/manuscript.md:376` now reads:
 
-> **Code.** [CITATION NEEDED: public repository URL and archived DOI (e.g. Zenodo) for
-> the analysis code, to be inserted on deposition.] The pipeline is dependency-light …
+> **Code.** All analysis code is public at
+> `https://github.com/ivanjalid1/hsv1-crispr-escape` and permanently archived at Zenodo
+> (Heredia Jalid, 2026), doi:`10.5281/zenodo.22664837`, which resolves at
+> `https://doi.org/10.5281/zenodo.22664837`. That is the concept DOI and always resolves
+> to the most recent archived version; the release reported here is v1.0.0. The pipeline
+> is dependency-light …
 
-Replace the bracket with something of this form:
-
-> **Code.** All analysis code is available at
-> `https://github.com/<user>/<REPO-NAME>` and archived at Zenodo,
-> doi:`10.5281/zenodo.<CONCEPT-ID>`. The pipeline is dependency-light …
-
-Then update the checklist entry in `manuscript/references.md` (item 14, around line
-331) from **UNRESOLVED** to **RESOLVED**, and the count in the paragraph at line 226
-from "Thirteen are now RESOLVED; one remains" to "All fourteen are now RESOLVED". The
-sentence at line 10 saying one placeholder remains needs the same treatment.
-
-```bash
-git add -A
-git commit -m "Record the public repository URL and the archived Zenodo DOI"
-git push
-```
+The author–year form matches the manuscript's citation style throughout, and the
+corresponding software entry was added to `manuscript/references.md` as **reference 10,
+`Heredia Jalid I.`**, inserted alphabetically between Hanley and Hsu (the entries that
+followed were renumbered 10–23 → 11–24). A note on its usage was added to the
+*Notes on citation usage* list, checklist item 14 was flipped from **UNRESOLVED** to
+**RESOLVED**, and the two summary sentences — the one in the header at
+`references.md:10` and the count at `references.md:239` — now read that all fourteen are
+RESOLVED.
 
 Optionally cut `v1.0.1` so the archived copy on Zenodo also contains its own DOI. This
 is cosmetic — the concept DOI already resolves to it — but it makes the deposited
 snapshot self-describing.
 
-- [ ] Step 1d placeholders (10–13) filled
-- [ ] `manuscript/references.md` checklist item 14 marked RESOLVED
-- [ ] pushed
+- [x] Step 1d placeholders (10–16) filled
+- [x] `manuscript/references.md` checklist item 14 marked RESOLVED
+- [x] software reference added to `manuscript/references.md` (reference 10)
+- [x] Zenodo DOI badge added at `README.md:3`, targeting the **concept** DOI
+- [x] pushed
 
 ---
 
-## Step 6 — Post the preprint
+## Step 6 — Post the preprint ← **YOU ARE HERE**
 
 Submit `manuscript/manuscript.md` to bioRxiv with the code URL and DOI now present in
 Section 7. Category: Bioinformatics, or Genomics. Declare no competing interests, as
@@ -447,7 +491,7 @@ Section 9 already states.
 
 ## Step 7 — Close the loop
 
-Fill the Step 1e placeholders (14–17) with the bioRxiv DOI, commit, push, and cut
+Fill the Step 1e placeholders (17–20) with the bioRxiv DOI, commit, push, and cut
 `v1.1.0`. Zenodo will archive it automatically and link the preprint as a related
 identifier, so the record, the repository and the paper all point at each other.
 
@@ -460,7 +504,7 @@ git push origin v1.1.0
 gh release create v1.1.0 --title "v1.1.0 — preprint linked" --notes "Citation metadata now carries the posted preprint DOI."
 ```
 
-- [ ] Step 1e placeholders (14–17) filled
+- [ ] Step 1e placeholders (17–20) filled
 - [ ] `v1.1.0` released
 - [ ] Zenodo record shows the preprint under Related identifiers
 
@@ -475,16 +519,22 @@ grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFI
 
 The author-identity placeholders — `[AUTHOR NAME]`, `[AUTHOR GIVEN NAME]`,
 `[AUTHOR FAMILY NAME]`, `[AFFILIATION …]` — and `[ORCID]` are gone, and so now are
-`[GITHUB-USER]` and `[REPO-NAME]`. None of them must ever come back; they are kept in
-the pattern above purely as a regression check.
+`[GITHUB-USER]`, `[REPO-NAME]` and `[ZENODO-CONCEPT-RECORD-ID]`. None of them must ever
+come back; they are kept in the pattern above purely as a regression check.
 
-**Exactly two identifiers remain unfilled, in six places, and both are waiting on an
+**Exactly one identifier remains unfilled, in four places, and it is waiting on an
 external service:**
 
 | what | where it still appears | filled by |
 |---|---|---|
-| Zenodo concept DOI + release date | `CITATION.cff:49`, `CITATION.cff:54`, `README.md:389`, `manuscript/manuscript.md:376` | Step 5, from the DOI Step 4 mints |
-| bioRxiv DOI | `CITATION.cff:86`, `CITATION.cff:87`, `.zenodo.json:34`, `README.md:387` | Step 7, from the DOI Step 6 receives |
+| bioRxiv DOI | `CITATION.cff:86`, `CITATION.cff:87`, `.zenodo.json:34`, `README.md:389` | Step 7, from the DOI Step 6 receives |
+
+The Zenodo concept DOI and the release date are **done** and are no longer placeholders:
+`CITATION.cff:49`, `CITATION.cff:54`, `README.md:3` (badge), `README.md:391-392`,
+`manuscript/manuscript.md:376`, `manuscript/references.md:61-65` and
+`manuscript/references.md:344-352` all carry `10.5281/zenodo.22664837`. The version DOI
+`10.5281/zenodo.22664838` is intentionally absent from every file except this one, which
+records it so it is not re-confused later; the check is in Step 1d.
 
 Everything else that grep returns is `PUBLISH.md` itself and the two `references.md`
 lines that *describe* the placeholder convention. When it returns nothing but those,
