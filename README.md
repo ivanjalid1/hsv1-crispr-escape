@@ -5,7 +5,9 @@
 **Analysis code and archived results for the preprint *"What a genome corpus can and
 cannot certify about CRISPR antiviral escape: resolution floors, joint coverage, and a
 worked audit of an HSV-1 guide pair"*.**
-Manuscript: [`manuscript/manuscript.md`](manuscript/manuscript.md) ·
+Preprint PDF: [`manuscript/hsv1-crispr-escape-preprint.pdf`](manuscript/hsv1-crispr-escape-preprint.pdf)
+(A4, 26 pages, 1.4 MB, line-numbered; the submission-ready build) ·
+Manuscript source: [`manuscript/manuscript.md`](manuscript/manuscript.md) ·
 References: [`manuscript/references.md`](manuscript/references.md) ·
 Reconciled recommendation: [`results/recommendation.md`](results/recommendation.md)
 
@@ -196,6 +198,24 @@ both-strand substring search for every supported PAM on randomised sequences, GC
 sequences and the real HSV-1 reference, and `tests/test_offtarget.py` asserts set
 identity between the pigeonhole scanner and a structurally independent brute-force scan
 over the whole of chromosome 21. The optimisations are not approximations.
+
+### 4. Rebuild the preprint PDF
+
+```powershell
+.venv\Scripts\python.exe -m pip install pymupdf websockets
+.venv\Scripts\python.exe manuscript\build_pdf.py
+.venv\Scripts\python.exe manuscript\verify_pdf.py
+```
+
+`manuscript/hsv1-crispr-escape-preprint.pdf` is the submission-ready A4 build of
+`manuscript.md`, `references.md` and `figures/fig1-5.png`: 26 pages, 1.4 MB, single
+column, 11 pt on 1.5 line spacing, line numbered, page numbered, fonts embedded. It is
+tracked in the repository — at 1.4 MB it is a release artefact rather than clone bloat —
+so a reader who wants the paper does not have to build it. Markdown to styled HTML to
+headless Chrome; no LaTeX distribution is required. `verify_pdf.py` re-checks the built
+PDF against the Markdown sources and exits non-zero if anything is missing, mis-rendered
+or unembedded. See [`manuscript/README.md`](manuscript/README.md) for what each file in
+that directory is and how the build works.
 
 ---
 
@@ -437,7 +457,7 @@ PUBLISH.md                 the author's checklist for the GitHub push and the Ze
 
 src/                       the pipeline (see "Repository layout" detail below)
 tests/                     123 offline tests across eight files
-manuscript/                manuscript.md, references.md
+manuscript/                manuscript.md, references.md, the typeset preprint PDF and its build
 figures/                   fig1-fig5, .png and .pdf
 refs/                      third-party source material, with extraction notes
 results/                   pinned outputs (tracked by exception; see the policy above)

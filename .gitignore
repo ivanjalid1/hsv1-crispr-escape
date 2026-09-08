@@ -103,3 +103,6 @@ desktop.ini
 .env
 .env.*
 *.key
+
+# preprint build: the PDF is tracked, the intermediate HTML is not
+manuscript/*.html
