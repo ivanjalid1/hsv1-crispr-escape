@@ -382,10 +382,10 @@ Other supported configurations:
 
 Please cite **both** the preprint and the archived software release.
 
-* **Preprint** — [AUTHOR NAME]. *What a genome corpus can and cannot certify about CRISPR
+* **Preprint** — Ivan Heredia Jalid. *What a genome corpus can and cannot certify about CRISPR
   antiviral escape: resolution floors, joint coverage, and a worked audit of an HSV-1
   guide pair.* bioRxiv (2026). doi:`[BIORXIV-DOI]`
-* **Software** — [AUTHOR NAME]. *Conserved CRISPR-Cas9 target sites in HSV-1* (version
+* **Software** — Ivan Heredia Jalid. *Conserved CRISPR-Cas9 target sites in HSV-1* (version
   1.0.0). Zenodo (2026). doi:`10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]`
 
 GitHub renders [`CITATION.cff`](CITATION.cff) as a "Cite this repository" button that

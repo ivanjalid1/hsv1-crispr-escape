@@ -7,8 +7,8 @@ manuscript whose last unresolved citation (`manuscript/manuscript.md:376`) is fi
 Work through it in order. Steps 0–2 happen before anything is public and are the ones
 that are expensive to undo.
 
-Line numbers below are as of the commit that added this file. If a file has been
-edited since, find the placeholder instead of trusting the number:
+Line numbers below were refreshed by the commit that recorded the author identity.
+If a file has been edited since, find the placeholder instead of trusting the number:
 
 ```bash
 grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFILIATION\|\[ORCID\]\|\[GITHUB-USER\]\|\[REPO-NAME\]\|\[BIORXIV-DOI\|\[ZENODO-\|\[YYYY-MM-DD\]" \
@@ -17,118 +17,174 @@ grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFI
 
 ---
 
-## Step 0 — DECIDE THIS FIRST: what name goes on the git history
+## Step 0 — DECIDE THIS FIRST: what name goes on the git history — **DONE**
 
-**This is the one irreversible privacy decision, and it must be made before the first
-push.**
+**This was the one irreversible privacy decision, and it had to be made before the
+first push. It has been made, executed and verified.**
 
-Every one of the nine commits in this repository was authored and committed under a
-single identity — your display name and your **institutional email address**. See it
-for yourself before deciding:
+### The decision
 
-```bash
-git log --all --format='%an <%ae>' | sort -u
-```
+Option **(c)** below: the whole history was rewritten to carry the identity the paper
+will be published under.
 
-That comes from your local `git config --global user.name` / `user.email`. It is baked
-into the commit objects, it is **not** covered by any `.gitignore`, and once the
-repository is public it is visible to anyone on every commit page and through the API.
-GitHub does not let you edit it after the fact without rewriting history and
-force-pushing. Search engines and scrapers index it.
+| field | value |
+|---|---|
+| Name | `Ivan Heredia Jalid` |
+| Email | `ivanjalid@gmail.com` |
+| Affiliation | `Independent Researcher, Córdoba, Argentina` |
+| ORCID | **not registered yet** — see Step 1b. Not invented, so the placeholder stays. |
 
-The manuscript deliberately carries `[AUTHOR NAME]` and `[AFFILIATION]` placeholders,
-so the repository would currently disclose an identity the manuscript does not.
-Decide which of these you want:
+Two surnames, no hyphen. `Heredia Jalid` is one family name and is recorded as a
+single field everywhere the metadata is structured, so that indexers cannot split it
+and attribute half the work to someone else.
 
-**(a) Keep it.** Nothing to do. Your name and institutional address appear on every
-commit. This is completely normal for academic code and is what most researchers do.
+### What was done
 
-**(b) Replace it with a GitHub no-reply address**, keeping your display name but not
-your institutional email. GitHub issues you one at
-`https://github.com/settings/emails` in the form `ID+username@users.noreply.github.com`.
-Set it for future commits and rewrite the existing nine:
+Every commit in this repository had originally been authored **and** committed under a
+display name and an **institutional email address**. All of them were rewritten:
 
 ```bash
-git config user.name  "Your Name"
-git config user.email "ID+username@users.noreply.github.com"
+git config user.name  "Ivan Heredia Jalid"
+git config user.email "ivanjalid@gmail.com"
 
-git filter-branch --env-filter '
-  export GIT_AUTHOR_NAME="Your Name"
-  export GIT_AUTHOR_EMAIL="ID+username@users.noreply.github.com"
-  export GIT_COMMITTER_NAME="Your Name"
-  export GIT_COMMITTER_EMAIL="ID+username@users.noreply.github.com"
-' --tag-name-filter cat -- --branches --tags
+git filter-branch -f --env-filter '
+  export GIT_AUTHOR_NAME="Ivan Heredia Jalid"
+  export GIT_AUTHOR_EMAIL="ivanjalid@gmail.com"
+  export GIT_COMMITTER_NAME="Ivan Heredia Jalid"
+  export GIT_COMMITTER_EMAIL="ivanjalid@gmail.com"
+' --tag-name-filter cat -- master
 ```
 
-**(c) Replace it with the identity you intend to publish under**, if the name on the
-paper differs from the name on your git config. Same commands as (b) with different
-values.
+Both the author and the committer fields were set. Setting only `GIT_AUTHOR_*` leaves
+the old address in the committer field, where GitHub still displays it.
 
-Verify whichever you chose, and confirm nothing else is left:
+The rewrite was verified to be **identity-only** before anything was discarded: the
+commit count was unchanged, every commit message and every tree hash was identical to
+the pre-rewrite fingerprint, the tree hash of `HEAD` was unchanged, author and
+committer dates were preserved, and `git diff` between a `backup-pre-rewrite` ref and
+the rewritten branch was empty. Only then were the backup ref and `refs/original/`
+deleted and the old objects expired:
+
+```bash
+git branch -D backup-pre-rewrite
+git for-each-ref --format='%(refname)' refs/original/ | while read r; do git update-ref -d "$r"; done
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+```
+
+The pre-rewrite commit objects are now unreachable and `git cat-file -e` on them
+fails, so the institutional address is not recoverable from the object store. All of
+this happened while the repository still had **no remote**, so nothing under the old
+identity was ever pushed anywhere.
+
+### Confirm it at any time
 
 ```bash
 git log --all --format='%an <%ae> | %cn <%ce>' | sort -u    # expect exactly one line
 git log -p --all | grep -nEI '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
-  | grep -v 'you@example.org'
+  | grep -v 'you@example.org' | grep -v 'ivanjalid@gmail.com'
 ```
+
+`ivanjalid@gmail.com` is excluded above because it is now *meant* to be in the tree:
+it is the correspondence address on the preprint and the `email` field in
+`CITATION.cff`. It is a personal address chosen for publication, not an institutional
+one disclosed by accident.
 
 The second command will still print the corresponding-author addresses of Amrani et
 al. and the affiliations inside `refs/amrani2024_full.xml` and
 `refs/amrani2024_full.txt`. Those are the published article's own contact details in a
 verbatim CC BY-NC-ND copy of it; they are not yours and they are meant to be there.
 
-- [ ] Step 0 decided and, if (b) or (c), executed and verified
+- [x] Step 0 decided, executed and verified — option (c), identity as above
 
 ---
 
 ## Step 1 — Fill the placeholders
 
-Nothing here is guessable, and nothing should be invented. Fill what you know now;
-the DOI placeholders are filled later, in Steps 5 and 7, because those DOIs do not
-exist yet.
+Nothing here is guessable, and nothing should be invented. The author identity is now
+filled in everywhere (1a). Everything still open — 1b to 1e — waits on an identifier
+that **does not exist yet**: an ORCID, a repository URL, a Zenodo DOI, a bioRxiv DOI.
+Each is filled at the step that creates it.
 
-### 1a. Fill now, before the first push
+### 1a. Author identity — **DONE**
+
+Filled from the Step 0 decision. Recorded here so the values can be checked, not
+re-decided.
+
+| file:line | field | value now in the file |
+|---|---|---|
+| `LICENSE:3` | copyright holder | `Copyright (c) 2026 Ivan Heredia Jalid` |
+| `CITATION.cff:27` | `given-names` | `Ivan` |
+| `CITATION.cff:28` | `family-names` | `Heredia Jalid` — **one** field, both surnames, no hyphen |
+| `CITATION.cff:29` | `email` | `ivanjalid@gmail.com` |
+| `CITATION.cff:30` | `affiliation` | `Independent Researcher, Córdoba, Argentina` |
+| `CITATION.cff:74-77` | the same four fields inside `preferred-citation` | as above |
+| `.zenodo.json:7` | `creators[0].name` | `Heredia Jalid, Ivan` — Zenodo's **`Family, Given`** order |
+| `.zenodo.json:8` | `creators[0].affiliation` | as above |
+| `manuscript/manuscript.md:3` | author line | `**Ivan Heredia Jalid**` |
+| `manuscript/manuscript.md:5` | affiliation | `Independent Researcher, Córdoba, Argentina` |
+| `manuscript/manuscript.md:9` | correspondence | `Correspondence: Ivan Heredia Jalid <ivanjalid@gmail.com>` — published deliberately |
+| `manuscript/manuscript.md:384` | Author Contributions | name and affiliation; the ORCID there is still a placeholder |
+| `README.md:385,388` | the two **How to cite** entries | `Ivan Heredia Jalid` |
+
+Section 9 of the manuscript, Competing Interests, needed no edit: it already declares
+no competing interests for "the author" without naming them.
+
+- [x] 1a done
+
+### 1b. ORCID — **open**. Needed before Step 4, not before Step 3.
+
+There is no ORCID yet. **Do not invent one.** Get one free at
+<https://orcid.org/register> — Zenodo and bioRxiv both use it, and it is the only
+durable way to keep this work attached to you. That matters more than usual for a
+two-surname name, which indexers routinely split.
 
 | # | file:line | placeholder | what to put |
 |---|---|---|---|
-| 1 | `LICENSE:3` | `Copyright (c) 2026 [AUTHOR NAME]` | your name as the copyright holder |
-| 2 | `CITATION.cff:25` | `given-names: "[AUTHOR GIVEN NAME]"` | given name(s) |
-| 3 | `CITATION.cff:26` | `family-names: "[AUTHOR FAMILY NAME]"` | family name |
-| 4 | `CITATION.cff:27` | `affiliation: "[AFFILIATION - independent researcher]"` | affiliation, or `Independent researcher` |
-| 5 | `CITATION.cff:31` | `# orcid: "https://orcid.org/0000-0000-0000-0000"` | **uncomment** and put your real ORCID URL, e.g. `https://orcid.org/0000-0002-1825-0097`. It ships commented out on purpose: the CFF schema validates the ORCID format strictly, so a `[ORCID]` placeholder there would make the whole file invalid and GitHub would silently drop the "Cite this repository" button. **No ORCID yet? Get one free at <https://orcid.org/register> — Zenodo and bioRxiv both use it, and it is the only durable way to keep this work attached to you.** If you truly want none, leave the line commented and delete line 9 of `.zenodo.json`. |
-| 6 | `CITATION.cff:33-34` | `repository-code:` / `url:` | `https://github.com/<user>/<repo>` — the URL you create in Step 3 |
-| 7 | `CITATION.cff:39` | `# date-released: 2026-01-01` | **uncomment** and set to the date you cut the release in Step 4, `YYYY-MM-DD`. Commented out for the same schema reason as #5. |
-| 8 | `CITATION.cff:69-72` | the same four author fields again | duplicate of #2–#5, inside `preferred-citation` |
-| 9 | `.zenodo.json:7` | `"name": "[AUTHOR FAMILY NAME], [AUTHOR GIVEN NAME]"` | **`Family, Given` order** — Zenodo requires it |
-| 10 | `.zenodo.json:8` | `"affiliation"` | same as #4 |
-| 11 | `.zenodo.json:9` | `"orcid": "[ORCID]"` | **bare digits with hyphens, no URL**: `0000-0002-1825-0097`. Zenodo rejects the URL form and rejects an invalid ORCID outright, so a leftover placeholder here will make the deposition fail — which is the intended behaviour, not a bug. |
-| 12 | `.zenodo.json:40` | `"identifier": "https://github.com/[GITHUB-USER]/[REPO-NAME]"` | the repository URL from #6 |
-| 13 | `README.md:83-84` | `git clone https://github.com/[GITHUB-USER]/[REPO-NAME].git` | the repository URL from #6 |
-| 14 | `manuscript/manuscript.md:3` | `**[AUTHOR NAME]**` | your name, as it will appear on the preprint |
-| 15 | `manuscript/manuscript.md:5` | `[AFFILIATION — independent researcher]` | affiliation |
-| 16 | `manuscript/manuscript.md:7` | `ORCID: [ORCID]` | ORCID |
-| 17 | `manuscript/manuscript.md:9` | `Correspondence: [AUTHOR NAME]` | name and the contact address you want printed on the preprint. **This one is published deliberately — do not use an address you would not want scraped.** |
-| 18 | `manuscript/manuscript.md:384` | author-contributions line | name, affiliation, ORCID |
+| 1 | `.zenodo.json:9` | `"orcid": "[ORCID]"` | **bare digits with hyphens, no URL**: `0000-0002-1825-0097`. Left live on purpose: Zenodo rejects a malformed ORCID outright, so this placeholder is a hard gate that fails the deposition rather than quietly publishing a record with no ORCID. That is the intended behaviour, not a bug. |
+| 2 | `CITATION.cff:36` | `# orcid: "https://orcid.org/0000-0000-0000-0000"` | **uncomment** and put the real ORCID **URL**. It ships commented out, rather than carrying an `[ORCID]` placeholder, because the CFF schema type-checks this field: a placeholder would invalidate the whole file and GitHub would silently drop the "Cite this repository" button. |
+| 3 | `CITATION.cff:79` | the same line inside `preferred-citation` | same value, same reason |
+| 4 | `manuscript/manuscript.md:7` | `ORCID: [ORCID]` | the ORCID as printed on the preprint |
+| 5 | `manuscript/manuscript.md:384` | `ORCID [ORCID]` in Author Contributions | same |
 
-### 1b. Fill in Step 5, once the Zenodo DOI exists
+If you truly want no ORCID at all: leave both `CITATION.cff` lines commented and
+**delete** line 9 of `.zenodo.json` rather than leaving `[ORCID]` in it, or the
+deposition in Step 4 will fail.
+
+- [ ] 1b done — ORCID registered and filled in all five places
+
+### 1c. Repository URL — fill in Step 3, once the GitHub repository exists
 
 | # | file:line | placeholder |
 |---|---|---|
-| 19 | `CITATION.cff:44` | `doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"` |
-| 20 | `README.md:389` | `doi:`10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]`` |
-| 21 | `manuscript/manuscript.md:376` | the whole `[CITATION NEEDED: …]` bracket |
+| 6 | `CITATION.cff:38` | `repository-code: "https://github.com/[GITHUB-USER]/[REPO-NAME]"` |
+| 7 | `CITATION.cff:39` | `url: "https://github.com/[GITHUB-USER]/[REPO-NAME]"` |
+| 8 | `.zenodo.json:40` | `"identifier": "https://github.com/[GITHUB-USER]/[REPO-NAME]"` |
+| 9 | `README.md:83-84` | `git clone https://github.com/[GITHUB-USER]/[REPO-NAME].git` and `cd [REPO-NAME]` |
 
-### 1c. Fill in Step 7, once the preprint is posted
+- [ ] 1c done (Step 3)
+
+### 1d. Release date and Zenodo DOI — fill in Steps 4 and 5
 
 | # | file:line | placeholder |
 |---|---|---|
-| 22 | `CITATION.cff:75-76` | `doi:` / `url:` under `preferred-citation` |
-| 23 | `.zenodo.json:34` | `"identifier": "10.1101/[BIORXIV-DOI-SUFFIX]"` |
-| 24 | `README.md:385-387` | the preprint line under **How to cite** |
+| 10 | `CITATION.cff:44` | `# date-released: 2026-01-01` — **uncomment** and set to the release date, `YYYY-MM-DD`. Commented out for the same schema reason as `orcid`. |
+| 11 | `CITATION.cff:49` | `doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"` |
+| 12 | `README.md:389` | `doi:` `10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]` |
+| 13 | `manuscript/manuscript.md:376` | the whole `[CITATION NEEDED: …]` bracket |
 
-- [ ] 1a done
-- [ ] 1b done (Step 5)
-- [ ] 1c done (Step 7)
+- [ ] 1d done (Steps 4-5)
+
+### 1e. bioRxiv DOI — fill in Step 7, once the preprint is posted
+
+| # | file:line | placeholder |
+|---|---|---|
+| 14 | `CITATION.cff:82` | `doi: "10.1101/[BIORXIV-DOI-SUFFIX]"` under `preferred-citation` |
+| 15 | `CITATION.cff:83` | `url: "https://doi.org/10.1101/[BIORXIV-DOI-SUFFIX]"` |
+| 16 | `.zenodo.json:34` | `"identifier": "10.1101/[BIORXIV-DOI-SUFFIX]"` |
+| 17 | `README.md:387` | `doi:` `[BIORXIV-DOI]` under **How to cite** |
+
+- [ ] 1e done (Step 7)
 
 ---
 
@@ -224,7 +280,8 @@ switched on, so this step must come before the release.**
 2. Go to <https://zenodo.org/account/settings/github/>. Click **Sync now** if the new
    repository is not listed.
 3. Flip the toggle **ON** for `<user>/<REPO-NAME>`.
-4. Confirm `.zenodo.json` is committed and its placeholders from Step 1a are filled.
+4. Confirm `.zenodo.json` is committed and that its ORCID (Step 1b) and repository
+   URL (Step 1c) placeholders are filled.
    Zenodo reads this file at release time; if the ORCID or an identifier is malformed
    the deposition fails and you will have to delete the release and redo it.
 5. Create the release:
@@ -258,7 +315,7 @@ gh release create v1.0.0 \
 
 ## Step 5 — Feed the DOI back into the repository and the manuscript
 
-Fill placeholders 19–21 from Step 1b, then commit and push. This is the step that
+Fill the Step 1d placeholders (10–13), then commit and push. This is the step that
 closes the manuscript's last open citation.
 
 `manuscript/manuscript.md:376` currently reads:
@@ -287,7 +344,7 @@ Optionally cut `v1.0.1` so the archived copy on Zenodo also contains its own DOI
 is cosmetic — the concept DOI already resolves to it — but it makes the deposited
 snapshot self-describing.
 
-- [ ] placeholders 19–21 filled
+- [ ] Step 1d placeholders (10–13) filled
 - [ ] `manuscript/references.md` checklist item 14 marked RESOLVED
 - [ ] pushed
 
@@ -306,7 +363,7 @@ Section 9 already states.
 
 ## Step 7 — Close the loop
 
-Fill placeholders 22–24 from Step 1c with the bioRxiv DOI, commit, push, and cut
+Fill the Step 1e placeholders (14–17) with the bioRxiv DOI, commit, push, and cut
 `v1.1.0`. Zenodo will archive it automatically and link the preprint as a related
 identifier, so the record, the repository and the paper all point at each other.
 
@@ -319,7 +376,7 @@ git push origin v1.1.0
 gh release create v1.1.0 --title "v1.1.0 — preprint linked" --notes "Citation metadata now carries the posted preprint DOI."
 ```
 
-- [ ] placeholders 22–24 filled
+- [ ] Step 1e placeholders (14–17) filled
 - [ ] `v1.1.0` released
 - [ ] Zenodo record shows the preprint under Related identifiers
 
@@ -332,8 +389,14 @@ grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFI
   README.md LICENSE CITATION.cff .zenodo.json PUBLISH.md manuscript/
 ```
 
-When that returns nothing outside `PUBLISH.md` itself and the two `references.md`
-lines that *describe* the placeholder convention, the repository is fully filled in.
+The author-identity placeholders — `[AUTHOR NAME]`, `[AUTHOR GIVEN NAME]`,
+`[AUTHOR FAMILY NAME]`, `[AFFILIATION …]` — are gone, and must never come back; they
+are kept in the pattern above purely as a regression check. What that grep still
+returns, correctly, is `[ORCID]` (Step 1b), `[GITHUB-USER]` / `[REPO-NAME]`
+(Step 1c), `[ZENODO-CONCEPT-RECORD-ID]` and the `CITATION NEEDED` bracket (Step 1d),
+and `[BIORXIV-DOI…]` (Step 1e) — plus `PUBLISH.md` itself and the two
+`references.md` lines that *describe* the placeholder convention. When it returns
+nothing but those last two, the repository is fully filled in.
 
 **Never invent a DOI or a URL to make the grep quiet.** A visible placeholder is
 correct; a plausible-looking fabricated identifier is a catastrophic failure, for

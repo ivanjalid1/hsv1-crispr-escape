@@ -1,12 +1,12 @@
 # What a genome corpus can and cannot certify about CRISPR antiviral escape: resolution floors, joint coverage, and a worked audit of an HSV-1 guide pair
 
-**[AUTHOR NAME]**
+**Ivan Heredia Jalid**
 
-[AFFILIATION — independent researcher]
+Independent Researcher, Córdoba, Argentina
 
 ORCID: [ORCID]
 
-Correspondence: [AUTHOR NAME]
+Correspondence: Ivan Heredia Jalid <ivanjalid@gmail.com>
 
 Preprint. Not peer reviewed.
 
@@ -381,7 +381,7 @@ All analyses are computational and use only public data.
 
 ## 8. Author Contributions
 
-**[AUTHOR NAME]** ([AFFILIATION — independent researcher]; ORCID [ORCID]) is the sole author and conceived the study, wrote all code, performed all analyses, and wrote the manuscript.
+**Ivan Heredia Jalid** (Independent Researcher, Córdoba, Argentina; ORCID [ORCID]) is the sole author and conceived the study, wrote all code, performed all analyses, and wrote the manuscript.
 
 ## 9. Competing Interests
 

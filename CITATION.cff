@@ -19,15 +19,20 @@ abstract: >-
 type: software
 
 # ---------------------------------------------------------------------------
-# PLACEHOLDERS -- fill these in before the first public push. See PUBLISH.md.
+# Author identity is final (see PUBLISH.md Step 0). The placeholders that remain
+# below -- ORCID, the repository URL and the Zenodo/bioRxiv DOIs -- are for
+# identifiers that do not exist yet and must NOT be invented. See PUBLISH.md.
 # ---------------------------------------------------------------------------
 authors:
-  - given-names: "[AUTHOR GIVEN NAME]"
-    family-names: "[AUTHOR FAMILY NAME]"
-    affiliation: "[AFFILIATION - independent researcher]"
-    # Uncomment and fill. It is left commented out because the CFF schema validates
-    # the ORCID format strictly, and a placeholder here would make the whole file
-    # invalid -- which would silently remove GitHub's "Cite this repository" button.
+  - given-names: "Ivan"
+    family-names: "Heredia Jalid"
+    email: "ivanjalid@gmail.com"
+    affiliation: "Independent Researcher, Córdoba, Argentina"
+    # No ORCID yet. Uncomment and fill once one is registered at
+    # <https://orcid.org/register>. This line is left commented out -- rather than
+    # carrying an "[ORCID]" placeholder -- because the CFF schema validates the
+    # ORCID format strictly, and a placeholder here would make the whole file
+    # invalid, which would silently remove GitHub's "Cite this repository" button.
     # orcid: "https://orcid.org/0000-0000-0000-0000"
 
 repository-code: "https://github.com/[GITHUB-USER]/[REPO-NAME]"
@@ -66,9 +71,11 @@ preferred-citation:
     resolution floors, joint coverage, and a worked audit of an HSV-1 guide
     pair
   authors:
-    - given-names: "[AUTHOR GIVEN NAME]"
-      family-names: "[AUTHOR FAMILY NAME]"
-      affiliation: "[AFFILIATION - independent researcher]"
+    - given-names: "Ivan"
+      family-names: "Heredia Jalid"
+      email: "ivanjalid@gmail.com"
+      affiliation: "Independent Researcher, Córdoba, Argentina"
+      # Commented out for the same schema reason as the author block above.
       # orcid: "https://orcid.org/0000-0000-0000-0000"
   year: 2026
   journal: bioRxiv
