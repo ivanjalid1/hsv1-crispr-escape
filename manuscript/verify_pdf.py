@@ -7,8 +7,9 @@ Checks:
   2. every verified reference in references.md is present;
   3. no Markdown syntax, placeholder or build marker leaked through;
   4. all fonts are embedded subsets, every figure is present exactly once,
-     nothing is drawn outside the intended text block, and the line numbers
-     form one unbroken 1..N sequence in reading order.
+     every page's MediaBox is the paper size build_pdf.py asked for (US Letter,
+     612 x 792 pt), nothing is drawn outside the intended text block, and the
+     line numbers form one unbroken 1..N sequence in reading order.
 
 Usage:  .venv/Scripts/python.exe manuscript/verify_pdf.py
 """
@@ -22,6 +23,18 @@ from pathlib import Path
 
 import pymupdf
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_pdf import (  # noqa: E402  -- page geometry has one home, build_pdf
+    GUTTER_MM,
+    MARGIN_BOTTOM_MM,
+    MARGIN_LEFT_MM,
+    MARGIN_RIGHT_MM,
+    MARGIN_TOP_MM,
+    MM_PER_IN,
+    PAGE_H_MM,
+    PAGE_W_MM,
+)
+
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,10 +42,15 @@ PDF = ROOT / "manuscript" / "hsv1-crispr-escape-preprint.pdf"
 MS = ROOT / "manuscript" / "manuscript.md"
 REFS = ROOT / "manuscript" / "references.md"
 
+# Everything about the page comes from build_pdf.py; the small slacks below are
+# the rounding tolerance of the extracted glyph boxes, not independent numbers.
 MM = 72 / 25.4
-TEXT_LEFT_MM, TEXT_RIGHT_MM = 24.0, 186.0
-TEXT_TOP_MM, TEXT_BOTTOM_MM = 20.0, 278.0
-GUTTER_MAX_MM = 23.0
+PAGE_W_PT, PAGE_H_PT = PAGE_W_MM * MM, PAGE_H_MM * MM        # 612 x 792 (Letter)
+TEXT_LEFT_MM = MARGIN_LEFT_MM + GUTTER_MM - 1.0
+TEXT_RIGHT_MM = PAGE_W_MM - MARGIN_RIGHT_MM + 1.0
+TEXT_TOP_MM = MARGIN_TOP_MM - 2.0
+TEXT_BOTTOM_MM = PAGE_H_MM - MARGIN_BOTTOM_MM + 1.0
+GUTTER_MAX_MM = MARGIN_LEFT_MM + GUTTER_MM - 2.0
 
 
 def norm(s: str) -> str:
@@ -217,7 +235,15 @@ def main() -> int:
         if f"Figure {n}." not in raw:
             problems.append(f"caption for Figure {n} missing")
 
-    # 4c -- geometry
+    # 4c -- paper size: the MediaBox, not what the CSS was asked for
+    sizes = {(round(p.rect.width, 2), round(p.rect.height, 2)) for p in doc}
+    want = (round(PAGE_W_PT, 2), round(PAGE_H_PT, 2))
+    print(f"page size                 : {sorted(sizes)} pt  expected {want} pt "
+          f"({PAGE_W_MM / MM_PER_IN:.2f} x {PAGE_H_MM / MM_PER_IN:.2f} in)")
+    if sizes != {want}:
+        problems.append(f"page size is {sorted(sizes)} pt, expected {want} pt")
+
+    # 4d -- geometry
     for i, page in enumerate(doc, 1):
         boxes = [b[:4] for b in page.get_text("blocks") if b[3] / MM < TEXT_BOTTOM_MM + 4]
         boxes += [im["bbox"] for im in page.get_image_info()]
@@ -226,12 +252,12 @@ def main() -> int:
             continue
         if max(b[2] for b in boxes) / MM > TEXT_RIGHT_MM:
             problems.append(f"page {i} overflows the right margin")
-        if min(b[0] for b in boxes) / MM < 15.0:
+        if min(b[0] for b in boxes) / MM < MARGIN_LEFT_MM:
             problems.append(f"page {i} overflows the left margin")
         if max(b[3] for b in boxes) / MM > TEXT_BOTTOM_MM:
             problems.append(f"page {i} overflows the bottom margin")
 
-    # 4d -- line numbers form 1..N in reading order
+    # 4e -- line numbers form 1..N in reading order
     nums: list[int] = []
     for page in doc:
         page_nums = []

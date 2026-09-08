@@ -6,7 +6,7 @@
 cannot certify about CRISPR antiviral escape: resolution floors, joint coverage, and a
 worked audit of an HSV-1 guide pair"*.**
 Preprint PDF: [`manuscript/hsv1-crispr-escape-preprint.pdf`](manuscript/hsv1-crispr-escape-preprint.pdf)
-(A4, 26 pages, 1.4 MB, line-numbered; the submission-ready build) ·
+(US Letter, 27 pages, 1.4 MB, line-numbered; the submission-ready build) ·
 Manuscript source: [`manuscript/manuscript.md`](manuscript/manuscript.md) ·
 References: [`manuscript/references.md`](manuscript/references.md) ·
 Reconciled recommendation: [`results/recommendation.md`](results/recommendation.md)
@@ -207,8 +207,8 @@ over the whole of chromosome 21. The optimisations are not approximations.
 .venv\Scripts\python.exe manuscript\verify_pdf.py
 ```
 
-`manuscript/hsv1-crispr-escape-preprint.pdf` is the submission-ready A4 build of
-`manuscript.md`, `references.md` and `figures/fig1-5.png`: 26 pages, 1.4 MB, single
+`manuscript/hsv1-crispr-escape-preprint.pdf` is the submission-ready US Letter build of
+`manuscript.md`, `references.md` and `figures/fig1-5.png`: 27 pages, 1.4 MB, single
 column, 11 pt on 1.5 line spacing, line numbered, page numbered, fonts embedded. It is
 tracked in the repository — at 1.4 MB it is a release artefact rather than clone bloat —
 so a reader who wants the paper does not have to build it. Markdown to styled HTML to

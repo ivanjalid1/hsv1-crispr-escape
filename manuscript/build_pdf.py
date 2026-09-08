@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a submission-ready A4 PDF of the manuscript.
+"""Build a submission-ready US Letter PDF of the manuscript.
 
 Pipeline:  manuscript.md + references.md  ->  self-contained HTML  ->  headless
 Chrome (DevTools Protocol Page.printToPDF)  ->  manuscript/hsv1-crispr-escape-preprint.pdf
@@ -43,15 +43,35 @@ CHROME_CANDIDATES = [
 ]
 
 # ---------------------------------------------------------------- page geometry
-# A4 210 x 297 mm.  Margins below are the *paper* margins handed to Chrome; the
-# body then carries a 10 mm left gutter that holds the line numbers, so the text
-# block itself starts 25 mm from the left edge and ends 25 mm from the right.
+# US Letter, 8.5 x 11 in = 215.9 x 279.4 mm, portrait.  bioRxiv's submission
+# form asks for this size explicitly ("Please use the standard paper size of
+# 8.5 x 11 inches ... to ensure successful PDF conversion"), so the build
+# targets Letter rather than A4; do not switch it back.
+#
+# These are the single source of truth for the page: the CSS @page rule, the
+# body width, the Chrome printToPDF call and verify_pdf.py's margin checks are
+# all derived from them, so changing the paper size means changing it here only.
+#
+# Margins below are the *paper* margins handed to Chrome; the body then carries
+# a 10 mm left gutter that holds the line numbers, so the text block itself
+# starts 25 mm from the left edge and ends 25 mm from the right.
+PAGE_W_MM, PAGE_H_MM = 215.9, 279.4
 MARGIN_TOP_MM, MARGIN_BOTTOM_MM = 22.0, 20.0
 MARGIN_LEFT_MM, MARGIN_RIGHT_MM = 15.0, 25.0
 GUTTER_MM = 10.0
-CONTENT_W_MM = 210.0 - MARGIN_LEFT_MM - MARGIN_RIGHT_MM      # 170 mm
-TEXT_W_MM = CONTENT_W_MM - GUTTER_MM                          # 160 mm
-FIG_MAX_H_MM = 160.0
+CONTENT_W_MM = PAGE_W_MM - MARGIN_LEFT_MM - MARGIN_RIGHT_MM   # 175.9 mm
+TEXT_W_MM = CONTENT_W_MM - GUTTER_MM                          # 165.9 mm
+TEXT_H_MM = PAGE_H_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM      # 237.4 mm
+
+# A figure and its caption carry `break-inside: avoid`, so the whole block moves
+# to the next page if it does not fit.  Cap the image at five eighths of the text
+# height: captions run 20-45 mm, which leaves 45-70 mm of the page for text, so a
+# figure can still follow the paragraph that cites it instead of starting a fresh
+# page and stranding the bottom of the previous one.  (This is a *fraction of the
+# page*, not a constant -- Letter's text block is 18 mm shorter than A4's, and at
+# A4's old fixed 160 mm every figure began its own page and the whitespace in the
+# document rose by a third.)
+FIG_MAX_H_MM = TEXT_H_MM * 5 / 8                              # 148.4 mm
 
 MM_PER_IN = 25.4
 
@@ -330,7 +350,7 @@ def extract_reference_list(refs_md: str) -> str:
 
 # ========================================================================== CSS
 CSS = f"""
-@page {{ size: A4; }}
+@page {{ size: {PAGE_W_MM}mm {PAGE_H_MM}mm; }}
 
 html {{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
 
@@ -714,8 +734,8 @@ def print_pdf(html_path: Path, pdf_path: Path, run_lineno: bool) -> None:
                         "landscape": False,
                         "printBackground": True,
                         "scale": 1,
-                        "paperWidth": 210 / MM_PER_IN,
-                        "paperHeight": 297 / MM_PER_IN,
+                        "paperWidth": PAGE_W_MM / MM_PER_IN,
+                        "paperHeight": PAGE_H_MM / MM_PER_IN,
                         "marginTop": MARGIN_TOP_MM / MM_PER_IN,
                         "marginBottom": MARGIN_BOTTOM_MM / MM_PER_IN,
                         "marginLeft": MARGIN_LEFT_MM / MM_PER_IN,
