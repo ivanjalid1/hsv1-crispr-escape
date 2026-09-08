@@ -340,6 +340,8 @@ def pair_analysis(pool: pd.DataFrame, mat: np.ndarray, columns: dict[str, int],
                 "icp27_conservation": rrow.conservation_complete_genomes,
                 "icp27_gc": rrow.gc_content,
                 "icp27_local_gc_200bp": rrow.local_gc_200bp,
+                "icp0_gene_level": lrow.conservation_gene_level,
+                "icp27_gene_level": rrow.conservation_gene_level,
                 "icp0_n_present": int(np.count_nonzero(li)),
                 "icp27_n_present": int(np.count_nonzero(ri)),
                 "n_genomes_both_present": both,
@@ -365,10 +367,19 @@ def pair_analysis(pool: pd.DataFrame, mat: np.ndarray, columns: dict[str, int],
             "joint presence count outside [max(0, a+b-n), min(a, b)] for "
             f"{len(bad)} pair(s); first: {bad.iloc[0].to_dict()}"
         )
-    return out.sort_values(
-        ["joint_conservation", "icp0_conservation", "icp27_conservation",
-         "icp0_guide", "icp27_guide"],
-        ascending=[False, False, False, True, True], kind="stable").reset_index(drop=True)
+    # Ties on joint conservation are broken by the weaker of the two guides' gene-level
+    # scores (the second, independent denominator), then by the marginals, then by
+    # coordinate. Without the gene-level term the tie-break would be alphabetical,
+    # which would let a site with less corroborating evidence be named "best" purely
+    # on its identifier.
+    out["_min_gene_level"] = out[["icp0_gene_level", "icp27_gene_level"]].min(
+        axis=1).fillna(-1.0)
+    out = out.sort_values(
+        ["joint_conservation", "_min_gene_level", "icp0_conservation",
+         "icp27_conservation", "icp0_guide", "icp27_guide"],
+        ascending=[False, False, False, False, True, True],
+        kind="stable").reset_index(drop=True)
+    return out.drop(columns=["_min_gene_level"])
 
 
 # --------------------------------------------------------------------------------------

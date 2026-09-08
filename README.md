@@ -557,7 +557,9 @@ meaningless.
   (0.825)** -- *below either guide's own conservation*, because the two guides fail
   in different isolates. 258 filter-passing pairs beat it and 8 are intact in all
   183. Keeping ICP27g1 exactly as published and swapping only the ICP0 guide for
-  `RL2_3364+` takes the pair from 0.825 to **0.978** (28 more isolates covered).
+  `RL2_3441+` — perfectly conserved on *both* denominators, GC 0.50, local GC 0.635,
+  present in both ICP0 copies — takes the pair from 0.825 to **0.978** (28 more
+  isolates covered).
   This joint number is invisible to a per-guide conservation table, which is the
   form in which their method reports its selection.
 
