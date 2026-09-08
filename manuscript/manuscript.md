@@ -4,7 +4,7 @@
 
 Independent Researcher, Córdoba, Argentina
 
-ORCID: [ORCID]
+ORCID: 0009-0003-6702-1295
 
 Correspondence: Ivan Heredia Jalid <ivanjalid@gmail.com>
 
@@ -381,7 +381,7 @@ All analyses are computational and use only public data.
 
 ## 8. Author Contributions
 
-**Ivan Heredia Jalid** (Independent Researcher, Córdoba, Argentina; ORCID [ORCID]) is the sole author and conceived the study, wrote all code, performed all analyses, and wrote the manuscript.
+**Ivan Heredia Jalid** (Independent Researcher, Córdoba, Argentina; ORCID 0009-0003-6702-1295) is the sole author and conceived the study, wrote all code, performed all analyses, and wrote the manuscript.
 
 ## 9. Competing Interests
 

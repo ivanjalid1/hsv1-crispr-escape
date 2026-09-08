@@ -32,7 +32,7 @@ will be published under.
 | Name | `Ivan Heredia Jalid` |
 | Email | `ivanjalid@gmail.com` |
 | Affiliation | `Independent Researcher, Córdoba, Argentina` |
-| ORCID | **not registered yet** — see Step 1b. Not invented, so the placeholder stays. |
+| ORCID | `0009-0003-6702-1295` |
 
 Two surnames, no hyphen. `Heredia Jalid` is one family name and is recorded as a
 single field everywhere the metadata is structured, so that indexers cannot split it
@@ -102,9 +102,9 @@ verbatim CC BY-NC-ND copy of it; they are not yours and they are meant to be the
 ## Step 1 — Fill the placeholders
 
 Nothing here is guessable, and nothing should be invented. The author identity is now
-filled in everywhere (1a). Everything still open — 1b to 1e — waits on an identifier
-that **does not exist yet**: an ORCID, a repository URL, a Zenodo DOI, a bioRxiv DOI.
-Each is filled at the step that creates it.
+filled in everywhere, the ORCID included (1a, 1b). Everything still open — 1c to 1e —
+waits on an identifier that **does not exist yet**: a repository URL, a Zenodo DOI, a
+bioRxiv DOI. Each is filled at the step that creates it.
 
 ### 1a. Author identity — **DONE**
 
@@ -124,7 +124,7 @@ re-decided.
 | `manuscript/manuscript.md:3` | author line | `**Ivan Heredia Jalid**` |
 | `manuscript/manuscript.md:5` | affiliation | `Independent Researcher, Córdoba, Argentina` |
 | `manuscript/manuscript.md:9` | correspondence | `Correspondence: Ivan Heredia Jalid <ivanjalid@gmail.com>` — published deliberately |
-| `manuscript/manuscript.md:384` | Author Contributions | name and affiliation; the ORCID there is still a placeholder |
+| `manuscript/manuscript.md:384` | Author Contributions | name, affiliation and ORCID |
 | `README.md:385,388` | the two **How to cite** entries | `Ivan Heredia Jalid` |
 
 Section 9 of the manuscript, Competing Interests, needed no edit: it already declares
@@ -132,26 +132,38 @@ no competing interests for "the author" without naming them.
 
 - [x] 1a done
 
-### 1b. ORCID — **open**. Needed before Step 4, not before Step 3.
+### 1b. ORCID — **DONE**
 
-There is no ORCID yet. **Do not invent one.** Get one free at
-<https://orcid.org/register> — Zenodo and bioRxiv both use it, and it is the only
-durable way to keep this work attached to you. That matters more than usual for a
-two-surname name, which indexers routinely split.
+`0009-0003-6702-1295`. Registered at ORCID; the ISO 7064 MOD 11-2 check digit was
+verified before it was written anywhere (computed 5, declared 5).
 
-| # | file:line | placeholder | what to put |
-|---|---|---|---|
-| 1 | `.zenodo.json:9` | `"orcid": "[ORCID]"` | **bare digits with hyphens, no URL**: `0000-0002-1825-0097`. Left live on purpose: Zenodo rejects a malformed ORCID outright, so this placeholder is a hard gate that fails the deposition rather than quietly publishing a record with no ORCID. That is the intended behaviour, not a bug. |
-| 2 | `CITATION.cff:36` | `# orcid: "https://orcid.org/0000-0000-0000-0000"` | **uncomment** and put the real ORCID **URL**. It ships commented out, rather than carrying an `[ORCID]` placeholder, because the CFF schema type-checks this field: a placeholder would invalidate the whole file and GitHub would silently drop the "Cite this repository" button. |
-| 3 | `CITATION.cff:79` | the same line inside `preferred-citation` | same value, same reason |
-| 4 | `manuscript/manuscript.md:7` | `ORCID: [ORCID]` | the ORCID as printed on the preprint |
-| 5 | `manuscript/manuscript.md:384` | `ORCID [ORCID]` in Author Contributions | same |
+**The two files want two different forms. This is not a style choice — each schema
+rejects the other's form.**
 
-If you truly want no ORCID at all: leave both `CITATION.cff` lines commented and
-**delete** line 9 of `.zenodo.json` rather than leaving `[ORCID]` in it, or the
-deposition in Step 4 will fail.
+| file:line | form required | value now in the file |
+|---|---|---|
+| `CITATION.cff:36` | **full URI** | `orcid: "https://orcid.org/0009-0003-6702-1295"` |
+| `CITATION.cff:79` | **full URI**, inside `preferred-citation` | same |
+| `.zenodo.json:9` | **bare identifier, no URL** | `"orcid": "0009-0003-6702-1295"` |
+| `manuscript/manuscript.md:7` | bare, after the `ORCID:` label | `ORCID: 0009-0003-6702-1295` |
+| `manuscript/manuscript.md:384` | bare, in Author Contributions | `ORCID 0009-0003-6702-1295` |
 
-- [ ] 1b done — ORCID registered and filled in all five places
+Both `CITATION.cff` lines are now **uncommented and live**. They shipped commented out
+only because a placeholder would have failed the schema's type check; with a real value
+there is nothing left to protect against, and leaving them commented would have thrown
+away the ORCID's whole purpose. The file was re-validated against the CFF 1.2.0 schema
+with the field live — `cffconvert --validate -i CITATION.cff` reports
+*"Citation metadata are valid according to schema version 1.2.0"* — so GitHub's
+"Cite this repository" button still works.
+
+That check also confirms the two-surname handling survives the round trip: the
+generated BibTeX is `author = {Heredia Jalid, Ivan}` and the APA form is
+`Heredia Jalid I.`, with the surname intact rather than split.
+
+`date-released` stays commented out. There is no release yet, and unlike `orcid` it
+still has no real value to carry.
+
+- [x] 1b done — ORCID registered, verified and filled in all five places
 
 ### 1c. Repository URL — fill in Step 3, once the GitHub repository exists
 
@@ -168,8 +180,8 @@ deposition in Step 4 will fail.
 
 | # | file:line | placeholder |
 |---|---|---|
-| 10 | `CITATION.cff:44` | `# date-released: 2026-01-01` — **uncomment** and set to the release date, `YYYY-MM-DD`. Commented out for the same schema reason as `orcid`. |
-| 11 | `CITATION.cff:49` | `doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"` |
+| 10 | `CITATION.cff:45` | `# date-released: 2026-01-01` — **uncomment** and set to the release date, `YYYY-MM-DD`. Commented out for the same schema reason as `orcid`. |
+| 11 | `CITATION.cff:50` | `doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"` |
 | 12 | `README.md:389` | `doi:` `10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]` |
 | 13 | `manuscript/manuscript.md:376` | the whole `[CITATION NEEDED: …]` bracket |
 
@@ -280,8 +292,8 @@ switched on, so this step must come before the release.**
 2. Go to <https://zenodo.org/account/settings/github/>. Click **Sync now** if the new
    repository is not listed.
 3. Flip the toggle **ON** for `<user>/<REPO-NAME>`.
-4. Confirm `.zenodo.json` is committed and that its ORCID (Step 1b) and repository
-   URL (Step 1c) placeholders are filled.
+4. Confirm `.zenodo.json` is committed. Its ORCID is filled (Step 1b); its repository
+   URL placeholder (Step 1c) must be filled before this step, or the deposition fails.
    Zenodo reads this file at release time; if the ORCID or an identifier is malformed
    the deposition fails and you will have to delete the release and redo it.
 5. Create the release:
@@ -390,13 +402,13 @@ grep -rn "\[AUTHOR NAME\]\|\[AUTHOR GIVEN NAME\]\|\[AUTHOR FAMILY NAME\]\|\[AFFI
 ```
 
 The author-identity placeholders — `[AUTHOR NAME]`, `[AUTHOR GIVEN NAME]`,
-`[AUTHOR FAMILY NAME]`, `[AFFILIATION …]` — are gone, and must never come back; they
-are kept in the pattern above purely as a regression check. What that grep still
-returns, correctly, is `[ORCID]` (Step 1b), `[GITHUB-USER]` / `[REPO-NAME]`
-(Step 1c), `[ZENODO-CONCEPT-RECORD-ID]` and the `CITATION NEEDED` bracket (Step 1d),
-and `[BIORXIV-DOI…]` (Step 1e) — plus `PUBLISH.md` itself and the two
-`references.md` lines that *describe* the placeholder convention. When it returns
-nothing but those last two, the repository is fully filled in.
+`[AUTHOR FAMILY NAME]`, `[AFFILIATION …]` — and `[ORCID]` are gone, and must never
+come back; they are kept in the pattern above purely as a regression check. What that
+grep still returns, correctly, is `[GITHUB-USER]` / `[REPO-NAME]` (Step 1c),
+`[ZENODO-CONCEPT-RECORD-ID]` and the `CITATION NEEDED` bracket (Step 1d), and
+`[BIORXIV-DOI…]` (Step 1e) — plus `PUBLISH.md` itself and the two `references.md`
+lines that *describe* the placeholder convention. When it returns nothing but those
+last two, the repository is fully filled in.
 
 **Never invent a DOI or a URL to make the grep quiet.** A visible placeholder is
 correct; a plausible-looking fabricated identifier is a catastrophic failure, for
