@@ -1,0 +1,27 @@
+{
+  "n_guides": 4777,
+  "n_strains_total": 183,
+  "conservation_cumulative_counts": {
+    "== 1.00 (perfect)": 833,
+    ">= 0.99": 1465,
+    ">= 0.95": 3431,
+    ">= 0.90": 3892,
+    ">= 0.50": 4442,
+    "== 0.00": 0
+  },
+  "conservation_mean": 0.901334,
+  "conservation_median": 0.978142,
+  "conservation_min": 0.04918,
+  "n_has_polyT": 119,
+  "n_gc_out_of_range": 1366,
+  "n_passing_all_filters": 644,
+  "perfectly_conserved_per_gene": {
+    "RL2": 91,
+    "UL19": 247,
+    "UL29": 124,
+    "UL30": 104,
+    "UL5": 94,
+    "UL52": 121,
+    "UL54": 52
+  }
+}

@@ -1,0 +1,386 @@
+{
+  "generated": "2026-09-08T16:12:47Z",
+  "nuclease": {
+    "nuclease": "sacas9",
+    "spacer_length": 20,
+    "pam": "NNGRRT",
+    "pam_side": "3prime",
+    "target_length": 26,
+    "tag": "sacas9-20nt",
+    "description": "Staphylococcus aureus Cas9; 21 nt spacer, 3' NNGRRT PAM. Used by Amrani et al. 2024 (EBT-104), whose Table 1 reports 20 nt DNA spacers -- pass --spacer-length 20 to reproduce that exact site space."
+  },
+  "n_genomes": 183,
+  "n_sites": 449,
+  "genes": [
+    "UL30",
+    "UL19",
+    "UL5",
+    "UL52",
+    "UL29",
+    "RL2",
+    "UL54"
+  ],
+  "indel_spectrum": {
+    "name": "parametric-default",
+    "provenance": "ASSUMPTION",
+    "inframe_fraction": 0.19857139042438315,
+    "p_wt": 0.4,
+    "mean_deletion_length": 5.998935160396544
+  },
+  "params": {
+    "tol_variable": 0.5,
+    "tol_invariant": 0.05,
+    "min_variant_strains": 1,
+    "repeat_model": "redundant",
+    "p_disrupt": 1.0,
+    "frameshift_viability": {}
+  },
+  "amrani_lead_pair": {
+    "guides": [
+      "RL2_4496+",
+      "UL54_115156+"
+    ],
+    "joint_conservation": 0.825136612021858,
+    "p_escape": 0.0009719879026815389
+  },
+  "k_curve": [
+    {
+      "k": 1,
+      "p_escape_best": 0.00475423268917531,
+      "p_escape_if_independent": 0.00475423268917531,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+",
+      "genes": "UL19",
+      "below_0.001": false,
+      "below_1e-06": false
+    },
+    {
+      "k": 2,
+      "p_escape_best": 2.260272846282309e-05,
+      "p_escape_if_independent": 2.26027284628231e-05,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL19_37448-",
+      "genes": "UL19;UL19",
+      "below_0.001": true,
+      "below_1e-06": false
+    },
+    {
+      "k": 3,
+      "p_escape_best": 1.074586305225068e-07,
+      "p_escape_if_independent": 1.074586305225068e-07,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL19_37448-;UL19_37908+",
+      "genes": "UL19;UL19;UL19",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 4,
+      "p_escape_best": 5.108833339641135e-10,
+      "p_escape_if_independent": 5.108833339641135e-10,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+",
+      "genes": "UL19;UL19;UL19;UL19",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 5,
+      "p_escape_best": 2.4288582466870552e-12,
+      "p_escape_if_independent": 2.4288582466870556e-12,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+",
+      "genes": "UL19;UL19;UL19;UL19;UL19",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 6,
+      "p_escape_best": 1.154735727377263e-14,
+      "p_escape_if_independent": 1.1547357273772629e-14,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+;UL29_58709-",
+      "genes": "UL19;UL19;UL19;UL19;UL19;UL29",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 7,
+      "p_escape_best": 5.489882342455611e-17,
+      "p_escape_if_independent": 5.489882342455613e-17,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+;UL29_58709-;UL29_61292+",
+      "genes": "UL19;UL19;UL19;UL19;UL19;UL29;UL29",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 8,
+      "p_escape_best": 2.61001780922288e-19,
+      "p_escape_if_independent": 2.61001780922288e-19,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+;UL29_58709-;UL29_61292+;UL29_61578+",
+      "genes": "UL19;UL19;UL19;UL19;UL19;UL29;UL29;UL29",
+      "below_0.001": true,
+      "below_1e-06": true
+    }
+  ],
+  "minimum_k": {
+    "0.001": 2,
+    "1e-06": 3
+  },
+  "best_sets": {
+    "1": [
+      "UL19_36407+"
+    ],
+    "2": [
+      "UL19_36407+",
+      "UL19_37448-"
+    ],
+    "3": [
+      "UL19_36407+",
+      "UL19_37448-",
+      "UL19_37908+"
+    ],
+    "4": [
+      "UL19_36407+",
+      "UL19_37448-",
+      "UL19_37908+",
+      "UL19_38322+"
+    ],
+    "5": [
+      "UL19_36407+",
+      "UL19_37448-",
+      "UL19_37908+",
+      "UL19_38322+",
+      "UL19_39276+"
+    ],
+    "6": [
+      "UL19_36407+",
+      "UL19_37448-",
+      "UL19_37908+",
+      "UL19_38322+",
+      "UL19_39276+",
+      "UL29_58709-"
+    ],
+    "7": [
+      "UL19_36407+",
+      "UL19_37448-",
+      "UL19_37908+",
+      "UL19_38322+",
+      "UL19_39276+",
+      "UL29_58709-",
+      "UL29_61292+"
+    ],
+    "8": [
+      "UL19_36407+",
+      "UL19_37448-",
+      "UL19_37908+",
+      "UL19_38322+",
+      "UL19_39276+",
+      "UL29_58709-",
+      "UL29_61292+",
+      "UL29_61578+"
+    ]
+  },
+  "best_sets_one_per_gene": {
+    "1": [
+      "UL19_36407+"
+    ],
+    "2": [
+      "UL19_36407+",
+      "UL29_58709-"
+    ],
+    "3": [
+      "UL19_36407+",
+      "UL29_58709-",
+      "UL30_64524+"
+    ],
+    "4": [
+      "UL19_36407+",
+      "UL29_58709-",
+      "UL30_64524+",
+      "UL5_12570+"
+    ],
+    "5": [
+      "UL19_36407+",
+      "UL29_58709-",
+      "UL30_64524+",
+      "UL5_12570+",
+      "UL52_109245+"
+    ],
+    "6": [
+      "UL19_36407+",
+      "UL29_58709-",
+      "UL30_64524+",
+      "UL5_12570+",
+      "UL52_109245+",
+      "UL54_114833-"
+    ],
+    "7": [
+      "RL2_5080+",
+      "UL19_36407+",
+      "UL29_58709-",
+      "UL30_64524+",
+      "UL5_12570+",
+      "UL52_109245+",
+      "UL54_114833-"
+    ]
+  },
+  "k_curve_one_per_gene": [
+    {
+      "k": 1,
+      "p_escape_best": 0.00475423268917531,
+      "p_escape_if_independent": 0.00475423268917531,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+",
+      "genes": "UL19",
+      "below_0.001": false,
+      "below_1e-06": false
+    },
+    {
+      "k": 2,
+      "p_escape_best": 2.2602728462823098e-05,
+      "p_escape_if_independent": 2.26027284628231e-05,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL29_58709-",
+      "genes": "UL19;UL29",
+      "below_0.001": true,
+      "below_1e-06": false
+    },
+    {
+      "k": 3,
+      "p_escape_best": 1.074586305225068e-07,
+      "p_escape_if_independent": 1.074586305225068e-07,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL29_58709-;UL30_64524+",
+      "genes": "UL19;UL29;UL30",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 4,
+      "p_escape_best": 5.108833339641189e-10,
+      "p_escape_if_independent": 5.10883333964119e-10,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+",
+      "genes": "UL19;UL29;UL30;UL5",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 5,
+      "p_escape_best": 2.428858246687081e-12,
+      "p_escape_if_independent": 2.4288582466870815e-12,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+;UL52_109245+",
+      "genes": "UL19;UL29;UL30;UL5;UL52",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 6,
+      "p_escape_best": 1.1547357273772752e-14,
+      "p_escape_if_independent": 1.1547357273772755e-14,
+      "joint_conservation": 1.0,
+      "guides": "UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+;UL52_109245+;UL54_114833-",
+      "genes": "UL19;UL29;UL30;UL5;UL52;UL54",
+      "below_0.001": true,
+      "below_1e-06": true
+    },
+    {
+      "k": 7,
+      "p_escape_best": 1.0953664506819398e-16,
+      "p_escape_if_independent": 1.09536645068194e-16,
+      "joint_conservation": 1.0,
+      "guides": "RL2_5080+;UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+;UL52_109245+;UL54_114833-",
+      "genes": "RL2;UL19;UL29;UL30;UL5;UL52;UL54",
+      "below_0.001": true,
+      "below_1e-06": true
+    }
+  ],
+  "minimum_k_one_per_gene": {
+    "0.001": 2,
+    "1e-06": 3
+  },
+  "tolerance": {
+    "RL2": {
+      "codons": 776,
+      "variable_codons": 84,
+      "isolates_used": 175,
+      "isolates_dropped": 8,
+      "length_polymorphic": 156
+    },
+    "UL19": {
+      "codons": 1375,
+      "variable_codons": 89,
+      "isolates_used": 182,
+      "isolates_dropped": 1,
+      "length_polymorphic": 4
+    },
+    "UL29": {
+      "codons": 1197,
+      "variable_codons": 68,
+      "isolates_used": 181,
+      "isolates_dropped": 2,
+      "length_polymorphic": 1
+    },
+    "UL30": {
+      "codons": 1236,
+      "variable_codons": 127,
+      "isolates_used": 183,
+      "isolates_dropped": 0,
+      "length_polymorphic": 6
+    },
+    "UL5": {
+      "codons": 883,
+      "variable_codons": 53,
+      "isolates_used": 182,
+      "isolates_dropped": 1,
+      "length_polymorphic": 4
+    },
+    "UL52": {
+      "codons": 1059,
+      "variable_codons": 75,
+      "isolates_used": 183,
+      "isolates_dropped": 0,
+      "length_polymorphic": 6
+    },
+    "UL54": {
+      "codons": 513,
+      "variable_codons": 47,
+      "isolates_used": 179,
+      "isolates_dropped": 4,
+      "length_polymorphic": 1
+    }
+  },
+  "sensitivity": {
+    "orders_of_magnitude_spanned": 3.1455845615422486,
+    "min_spearman_rho": 0.44060092917642074,
+    "n_settings": 37,
+    "n_settings_all_best_sets_match_baseline": 27,
+    "neuronal_nhej_scenario": {
+      "provenance": "MEASURED in Ramadoss et al. 2025 (Nat Commun 16:9883) Fig. 1d deposited source data -- pooled CRISPResso2 net-length histogram over 6 replicates, 118,722 reads, SpCas9 RNP + sgRNA B2Mg1 at human B2M in iPSC-derived neurons, 4 d post-transduction; ASSUMPTION when transferred to SaCas9 in trigeminal-ganglion neurons",
+      "source_file": "ramadoss2025_fig1d_indel_histogram.tsv",
+      "inframe_fraction": 0.09034091944388768,
+      "baseline_inframe_fraction": 0.19857139042438315,
+      "p_escape_amrani_pair": 0.00036418944206119885,
+      "p_escape_amrani_pair_baseline": 0.0009719879026815389,
+      "fold_lower_amrani_pair": 2.6689074158229027,
+      "spearman_q_vs_baseline": 0.9999955853609123,
+      "top20_site_overlap_vs_baseline": 1.0,
+      "best_sets_all_match_baseline": true
+    }
+  },
+  "outputs": {
+    "site_parameters": "results/escape_site_parameters.tsv",
+    "k_curve": "results/escape_k_curve.tsv",
+    "k_curve_one_per_gene": "results/escape_k_curve_one_per_gene.tsv",
+    "guide_sets": "results/escape_guide_sets.tsv",
+    "codon_tolerance": "results/escape_codon_tolerance.tsv",
+    "sensitivity": "results/escape_sensitivity.tsv",
+    "sensitivity_sets": "results/escape_sensitivity_sets.tsv",
+    "tolerance_qc": "results/escape_tolerance_qc.tsv",
+    "report": "results/escape_model_report.md"
+  }
+}

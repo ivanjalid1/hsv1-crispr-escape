@@ -1,0 +1,55 @@
+{
+  "generated_utc": "2026-09-08T05:27:33Z",
+  "ensembl_release": 116,
+  "assembly": "GRCh38 primary assembly (unmasked)",
+  "genome_bases_scanned": 3099750718,
+  "genome_sequences_scanned": 194,
+  "genome_sequences_total": 194,
+  "pam_searched": "NNGRRN",
+  "max_mismatches": 4,
+  "spacer_lengths": [
+    20,
+    21
+  ],
+  "n_guides": 50,
+  "n_sites_total": 3454,
+  "pam_positions_examined": 774222748,
+  "timings": {
+    "acquire_seconds": 0.0,
+    "cache_seconds": 0.0,
+    "scan_seconds": 319.2,
+    "annotate_seconds": 4.8
+  },
+  "genome_manifest": {
+    "Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz": {
+      "url": "https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz",
+      "size_bytes": 881964081,
+      "sha256": "d8c3af0094a7bba6125763bad779ec18a81483c739c6ed122094bdf86c187b92",
+      "ensembl_release": 116,
+      "published_bsd_sum": 22450,
+      "published_blocks": 861294,
+      "bsd_sum": 22450,
+      "bsd_sum_blocks": 861294,
+      "bsd_sum_seconds": 101.4,
+      "bsd_sum_verified": true
+    },
+    "Homo_sapiens.GRCh38.116.gtf.gz": {
+      "url": "https://ftp.ensembl.org/pub/release-116/gtf/homo_sapiens/Homo_sapiens.GRCh38.116.gtf.gz",
+      "size_bytes": 141121632,
+      "sha256": "ed992f0eac7197d9627bda618f8f831ba355c95bd5d0796af785387d462828b6",
+      "ensembl_release": 116,
+      "published_bsd_sum": 49151,
+      "published_blocks": 137815,
+      "bsd_sum": 49151,
+      "bsd_sum_blocks": 137815,
+      "bsd_sum_verified": true
+    }
+  },
+  "disk_bytes": {
+    "fasta_gz": 881964081,
+    "encoded_u8": 3099750718,
+    "gtf_gz": 141121632,
+    "annotation_npz": 20384105
+  },
+  "caveat": "Guides were screened for substitution off-targets (<= 4 mismatches, PAM NNGRRN and NNGRRT) against the Ensembl release-116 GRCh38 primary assembly, both strands, genome-wide. Bulge-containing off-targets were NOT modelled, and no cell-based validation (e.g. GUIDE-seq) was performed."
+}

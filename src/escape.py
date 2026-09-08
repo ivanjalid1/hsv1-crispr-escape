@@ -1628,10 +1628,23 @@ def run(args: argparse.Namespace) -> dict:
     pre = args.prefix
     paths = {}
 
+    def rel(path: Path) -> str:
+        """Repository-relative POSIX path for the summary's `outputs` block.
+
+        Recording an absolute local path would leak the author's filesystem layout
+        into a published artefact and would make this file differ between machines
+        for no scientific reason. Falls back to the absolute path if the output was
+        directed somewhere outside the repository.
+        """
+        try:
+            return path.resolve().relative_to(PROJECT_ROOT).as_posix()
+        except ValueError:
+            return str(path)
+
     def write(name: str, df: pd.DataFrame):
         path = outdir / f"{pre}{name}.tsv"
         df.to_csv(path, sep="\t", index=False)
-        paths[name] = str(path)
+        paths[name] = rel(path)
         LOG.info("Wrote %s (%d rows)", path, len(df))
 
     write("site_parameters", sites)
@@ -1650,7 +1663,7 @@ def run(args: argparse.Namespace) -> dict:
     LOG.info("Wrote %s", report_path)
 
     summary = ctx["summary"]
-    summary["outputs"] = {**paths, "report": str(report_path)}
+    summary["outputs"] = {**paths, "report": rel(report_path)}
     json_path = outdir / f"{pre}summary.json"
     json_path.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
     LOG.info("Wrote %s", json_path)

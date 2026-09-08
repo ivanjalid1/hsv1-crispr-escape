@@ -1,0 +1,5 @@
+guide	spacer	pam	present_in_complete_genomes_n183	conservation_complete_genomes	gene_level_records_covering	gene_level_present	conservation_gene_level
+Amrani2024_ICP0g1	GTACCCGACGGCCCCCGCGT	CGGAGT	180	0.9836	445	417	0.9371
+Amrani2024_ICP0g2	CTCAGGCCGCGAACCAAGAA	CAGAGT	155	0.847	445	359	0.8067
+Amrani2024_ICP27g1	AATCCTAGACACGCACCGCC	AGGAGT	179	0.9781	444	432	0.973
+Amrani2024_ICP27g2	TCGCCAGCGTCATTAGCGGG	GGGGGT	178	0.9727	444	416	0.9369

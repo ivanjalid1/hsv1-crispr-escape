@@ -1,0 +1,94 @@
+# SHA-256 of every deterministic output of the pinned run.
+#
+# Pinned run: 183 complete HSV-1 genomes, retrieved 2026-09-07T21:56:25Z.
+# Manifest generated 2026-09-08T16:13:40Z
+#
+# WHY THIS FILE EXISTS. Most of results/ is not version-controlled: it is ~4 MB of
+# regenerable per-guide and per-site enumeration, and carrying it would make the
+# repository worse, not better. But "regenerable" is a claim, and a claim a reviewer
+# cannot check is not evidence. These hashes let anyone confirm that a regenerated
+# copy is identical to the one the manuscript was written from, without the
+# repository having to ship the file.
+#
+# LINE ENDINGS ARE NORMALISED BEFORE HASHING. Each hash is over the file content with
+# every CRLF (and every lone CR) replaced by LF. The pipeline writes CRLF on Windows
+# and LF elsewhere, and git itself rewrites line endings on checkout, so hashing the
+# raw bytes would make this manifest platform-specific and it would spuriously fail
+# for a reviewer on Linux or macOS. This means `sha256sum -c` will NOT agree with this
+# file on a machine whose checkout uses CRLF; use verify.py, which normalises the same
+# way, or on an LF platform:
+#     import hashlib, pathlib, sys
+#     b = pathlib.Path(sys.argv[1]).read_bytes()
+#     b = b.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+#     print(hashlib.sha256(b).hexdigest())
+#
+# HOW TO CHECK.
+#     python verify.py --rerun          # recomputes stages 2-4 and checks these hashes
+#     python verify.py --rerun --full   # also stages 6 and 7
+#
+# WHAT IS NOT LISTED, and why. This manifest cannot hash itself. Twelve further files
+# embed a generation timestamp, the invoking command line, or a measured wall-clock
+# duration, so they can never hash equal across runs even when every scientific value
+# in them is identical:
+#
+#     results/escape_model_report.md
+#     results/escape_summary.json
+#     results/offtarget_report.md
+#     results/offtarget_summary.json
+#     results/robustness_report.md
+#     results/robustness_summary.json
+#     results/run_log.json
+#     results/sacas9/run_log.json
+#     results/sacas9-20nt/run_log.json
+#     results/sacas9-nngrrn/run_log.json
+#     results/sacas9_benchmark_report.md
+#     results/sacas9_benchmark_summary.json
+#
+# The nine top-level files in that list are themselves version-controlled, so they
+# can be diffed directly; the three under results/sacas9*/ are alternative-nuclease
+# re-runs of stages 2-4 and are regenerated on demand. A re-run should differ from any
+# of them ONLY in timestamps, the recorded command line and measured durations; any
+# other difference is a real change and should be treated as one.
+#
+# Format is the usual "<sha256>  <path>", paths relative to the repository root and
+# with forward slashes on every platform.
+
+981b0ec2a22c8b3a939cde0d74896cf70ed5c383941e82b669163d33b7029bca  results/conservation.tsv
+b19eef2c0347a2c2217da28c4eccdd79e1d9024e5f824c3075181a34474e19d6  results/escape_codon_tolerance.tsv
+5f525bee9a490668133f9bbffca6728c6af4915bb35b83b42f08777c6e52c82a  results/escape_guide_sets.tsv
+405ff66f5ed57243ca41f6f586043d441f0cabfc05295129c079825ff34cae0e  results/escape_k_curve.tsv
+01ea7256ff084fe93a6b581f34ee31004c56c2ce9d408db5edaf8b7420f305c1  results/escape_k_curve_one_per_gene.tsv
+22e763e0131576523180d2f979738ae9a38c8c061c1bb82a7e73677474d2f4be  results/escape_sensitivity.tsv
+4d166ebe16c72203bee08fa407e41d7d3d65c9c4f11495e68e20d2c139f204c2  results/escape_sensitivity_sets.tsv
+a63e96619f161fd08d5defe4fc7b2e5e58b0487e4df4e34a31fd8906a6d384e1  results/escape_site_parameters.tsv
+6d22c46beeeea846bea2d2f11bc0dd4cd9f539b857613b59ae8bae5be77fb834  results/escape_tolerance_qc.tsv
+3a0144fb44d6490385fa7bb13aa892585847811a16ed06afe0ba554967c0954c  results/guides_candidates.tsv
+504db6f4610ab40cdbf9593d4e2a0a4db518f77a68ccbcf8430561a4837e4eab  results/guides_ranked.tsv
+5fa339b26b40a0adc18b2953b90446df98e1c5188afe77dc1359df6719cfd983  results/offtarget_annotated.tsv
+9e62f033af7c44d489beafbd9edad395f00bbb55cca1d687790d4f705c508047  results/offtarget_sites.tsv
+9865879cd9768c2a020f0d08cd0859de2a85ca1124800ffa3a26a2ea34bbb713  results/offtarget_summary.tsv
+c0a97626b9fa00e834a5a5211e3d4b980805fbd90960c303949fb412d6ef1583  results/recommendation.md
+deba8cfd2ad5f18757850dcfd1b9cc3c1d180910efe3531dcf4a15523ffcfc60  results/recommendation_table.tsv
+da05490c9ced061c2b1120b22f20651fbcb9d2b16454a27a9b453969d864feb0  results/robustness_ambiguity_sweep.tsv
+812a7eb830149cca6d2d67314b1f5c90bf0925675c1b2725f6c44ad0d5809929  results/robustness_benchmark_guides.tsv
+9d20be8f43a77019b1f86ff44c0f2cba641df379b2cd5a72318a6f58ba067561  results/robustness_conservation_modes.tsv
+6923f059cfad5f2bb28699a59a971f830568a76d5e1ced2f2f665db1eeacf3f6  results/robustness_effective_n.tsv
+962967284d5237aae56fa813b536907eaeb9cc7b67456b967ef9bc0e4243b6fa  results/robustness_gene_level.tsv
+ee38197ad96eb2203898a1d04716318a4980cd689265180b8d466335d5fa07ae  results/robustness_gene_level_by_gene.tsv
+a82cf637374bca63af1beeab86d9678e9c7c10649b8c159b740f0ca77b104036  results/robustness_gene_records.tsv
+f75539df5195ab437940fe97c98e5bab45f50133899b3559c2cbc15ec46e0e22  results/robustness_redundancy.tsv
+70e49bc2a1bb8faf75c87dcbed697d104bf94277f8d8cfc9b3d5b7cde86e66f2  results/sacas9/conservation.tsv
+547b8d3c56a41921e3399bb883a9aa4ba169df9720baffc5e27c7074e2607484  results/sacas9/guides_candidates.tsv
+e03a8f53270a0da21ba1ef1af36236024a72e0e7b00a893bf67eb9eed0c9dd9e  results/sacas9/guides_ranked.tsv
+7e1e7c48a4b8ffbe1f9f2b546cd939e4b88b608cc58e86bb649fe4a171783c51  results/sacas9/summary.json
+31ae4de9496c2808375f71a94e70e6b730c2710c45d858997af0ecfd529c1d0f  results/sacas9-20nt/conservation.tsv
+dab27a001e43115f5c7c6ba3c273dfa1802f1881fe698c8b5126c944f12727ed  results/sacas9-20nt/guides_candidates.tsv
+893b2159c25e0eb40db5df85dd6cdebbc08b72bfd9a3e0c0e8b63bd7045f1a93  results/sacas9-20nt/guides_ranked.tsv
+003dcef24956d2466394c7edb38da378fc42347f8de7b1ca2ac979587054be63  results/sacas9-20nt/summary.json
+928b2679c6d44e4cfe3897566bb106572e7b4af4c0d2397c76acbb8f0ed6c69c  results/sacas9-nngrrn/conservation.tsv
+49791169476a6838ac02f8e8a2831d9758b1d329a054283892cb6ad180798071  results/sacas9-nngrrn/guides_candidates.tsv
+1fc11d937366c5dac3b40ea7b4058429f5616a9928c17c60fadefd547bbac53f  results/sacas9-nngrrn/guides_ranked.tsv
+918176a0124280baa13ad6cdf186f17cf4ff5631219f454e7f72de9b43766f37  results/sacas9-nngrrn/summary.json
+cee4448902581d3145ad4fa344ab9007996b128263ca8ed747b1311287c35550  results/sacas9_benchmark_pairs.tsv
+b0072a4f70ca20dfa0d4c77a4fbc3297da441059f39c7396e3cf4e129648a6db  results/sacas9_benchmark_pool.tsv
+97b2e18f9e9801a945455d7a3bd3bd0c3926f98ec5d77071799f714f84ad2712  results/summary.json

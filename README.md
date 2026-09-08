@@ -1,30 +1,450 @@
 # Conserved CRISPR-Cas9 target sites in HSV-1
 
-Phase 1 of a computational study on escape-resistant multiplex guide RNA design for
-herpes simplex virus. This pipeline identifies CRISPR target sites in essential
-HSV-1 genes that are **perfectly conserved across every publicly available complete
-HSV-1 genome**, using an alignment-free exact-match method.
+**Analysis code and archived results for the preprint *"What a genome corpus can and
+cannot certify about CRISPR antiviral escape: resolution floors, joint coverage, and a
+worked audit of an HSV-1 guide pair"*.**
+Manuscript: [`manuscript/manuscript.md`](manuscript/manuscript.md) ·
+References: [`manuscript/references.md`](manuscript/references.md) ·
+Reconciled recommendation: [`results/recommendation.md`](results/recommendation.md)
 
-The nuclease is configurable: **SpCas9** (20 nt spacer, `NGG`) and **SaCas9**
-(21 nt spacer, `NNGRRT`, or the permissive `NNGRRN`) are supported, with IUPAC PAM
-patterns handled generically. That matters because the published competitor this
-work benchmarks against -- Amrani et al. 2024, EBT-104 -- uses SaCas9, so an
-SpCas9-only candidate set is not comparable to theirs site-for-site. Stage 6 does
-that comparison directly; see
-[SaCas9 head-to-head](#sacas9-head-to-head-with-amrani-et-al-2024).
+Multiplex CRISPR antivirals are justified by an escape argument — cut a viral genome at
+several conserved sites at once and no single repair event restores a viable, uncuttable
+genome — and that argument is almost always supported by a table of per-guide
+conservation percentages computed against a public sequence corpus. This repository
+implements the measurement end-to-end for herpes simplex virus type 1 and shows that the
+evidentiary chain has two structural weaknesses that are properties of the method rather
+than of any particular design. **First, the corpus imposes a resolution floor**: a site
+absent in 0 of 183 complete HSV-1 genomes is still consistent with a population absence
+frequency of 1.62 %, so sampling resolution — not the repair model — sets how low an
+escape probability can be *demonstrated*. **Second, joint intactness is not the product
+of marginal conservations and cannot be recovered from a per-guide table at all**; it
+needs a per-genome presence matrix. As a worked case study the pipeline audits the
+clinical-stage EBT-104 guide pair of Amrani et al. (2024) on real data, finds a
+recurrent single-base variant that removes one of its two target sites from 25 of 183
+sequenced isolates, and shows that changing one guide improves every axis that can be
+computed here. The audit is a demonstration of the two methodological points on
+clinical-stage guides, not an indictment: the published workflow could not have seen the
+gap, and the repository withdraws two of its own recommendations for the same reason.
 
-Three further opt-in stages take the comparison past conservation: stage 5
-(denominator robustness), stage 7 (a quantitative multiplex escape-probability
-model) and stage 8 (human GRCh38 off-target screening). Those three stages
-disagreed with each other about which guide to recommend; the disagreement is
-resolved, on all three axes jointly, in
-[`results/recommendation.md`](#the-reconciled-recommendation).
-
-It is deliberately dependency-light: pure Python plus Biopython, pandas and numpy.
-No conda, no WSL, no MAFFT/MUSCLE/Clustal, no compiled tooling beyond what pip
-wheels provide.
+Everything is pure Python plus Biopython, pandas, numpy and matplotlib. No aligner, no
+conda, no WSL, no compiled tooling beyond pip wheels. Conservation is defined as exact
+substring presence rather than alignment identity, so there is no gap penalty, no
+substitution matrix, no heuristic and no random seed anywhere in the measurement.
 
 ---
+
+## What it found
+
+All numbers below are from the pinned run of **2026-09-07**, against **183 complete
+HSV-1 genomes**. Every one of them is asserted by [`verify.py`](verify.py) against the
+version-controlled result files, and the section each belongs to in the manuscript is
+given so you can find the argument behind it.
+
+| | value | where |
+|---|---|---|
+| Complete HSV-1 genomes in GenBank at the retrieval date | **183** (147,898–159,092 bp) | Methods 5.1 |
+| SpCas9 `NGG` candidate sites across 7 essential genes | **4,777** | Results 2.1 |
+| ... present in **all** 183 genomes | **833** (17.4 %) | Results 2.1 |
+| ... and also passing poly-T, homopolymer and GC filters | **644** | Results 2.1 |
+| SaCas9 `NNGRRT` candidate sites, same 7 genes | **448** (67 perfect, 15.0 %) | Figure 3 |
+| Clopper–Pearson 95 % upper limit on 0 absences in 183 | **0.0162** | Results 2.1 |
+| ... so one site cannot be certified below | **~1.6 × 10⁻²** | Results 2.1 |
+| ... and a pair cannot be certified below | **~2.6 × 10⁻⁴** | Results 2.1 |
+| Certifiable minimum guide count at a 10⁻⁶ threshold | **4**, not the 3 a point estimate implies | Table 1 |
+| EBT-104 lead pair marginal conservations | 0.847 (ICP0g2) and 0.978 (ICP27g1) | Table 2 |
+| ... independence would predict joint intactness | 0.8285 | Results 2.2 |
+| ... **measured** joint intactness | **0.8251** (151/183) — *below either marginal* | Results 2.2 |
+| Isolates lacking the ICP0g2 target site | **28**; 25 carry an identical G→A at spacer position 9, 0 are N-gaps, 3 unresolved | Results 2.3, Figure 5 |
+| ... collapsing to independent lineages at 99.9 % identity | **13 clusters**, sampled 1967–2020, ≥ 2 continents | Results 2.3 |
+| ICP0 `NNGRRT` sites better conserved than ICP0g2 | **30 of 46**; 12 also pass every filter; 4 are perfect | Results 2.3 |
+| P(escape) of the published pair, per exposed genome | **9.720 × 10⁻⁴**; **96.2 %** of it from the 32 isolates that already lost a site | Table 3 |
+| Same architecture, one guide swapped (RL2_5335+ + ICP27g1) | joint **0.978**, P(escape) **2.515 × 10⁻⁴**, fewer off-targets on every measure | Table 4 |
+| Guide-set rankings stable across the sensitivity sweep | **27 of 37** settings, spanning 3.1 orders of magnitude in absolute P(escape) | Results 2.7 |
+
+Two of this repository's own recommendations were withdrawn during the work, one of them
+refuted by its own subsequent off-target screening. Both withdrawals are documented in
+[`results/recommendation.md`](results/recommendation.md) rather than quietly edited out.
+
+---
+
+## Reproduce
+
+### 0. Requirements
+
+| | |
+|---|---|
+| Python | **3.14** (developed and pinned on CPython 3.14.5, 64-bit) |
+| OS | developed on Windows 11; the code is pure Python and platform-independent |
+| Disk, stages 1–7 | **~250 MB** (183 genome FASTAs ~28 MB, gene-level corpus ~80 MB, results ~8 MB, plus caches) |
+| Disk, stage 8 | **+ ~4.1 GB** (see the warning below) |
+| Network | needed only by stage 1 and by the gene-corpus half of stage 5. Everything else runs offline from the caches those two populate. |
+
+```bash
+git clone https://github.com/[GITHUB-USER]/[REPO-NAME].git
+cd [REPO-NAME]
+
+python -m venv .venv
+# Windows
+.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
+# macOS / Linux
+.venv/bin/python -m pip install --only-binary=:all: -r requirements.txt
+```
+
+`--only-binary=:all:` is recommended: it makes pip fail loudly if a cp314 wheel is ever
+missing, rather than silently attempting a source build that would need a C toolchain.
+All four scientific packages ship prebuilt `cp314` wheels at the pinned versions
+(`numpy 2.5.3`, `pandas 3.0.5`, `biopython 1.88`, `matplotlib 3.11.1`). Note that pandas
+3.0 is a major release with behavioural changes from 2.x; this code is written against
+3.0 and was run against it.
+
+### 1. Set the required environment variables
+
+```powershell
+# PowerShell
+$env:NCBI_EMAIL = "you@example.org"      # REQUIRED
+$env:NCBI_API_KEY = "<your key>"         # optional
+```
+
+```bash
+# bash / zsh
+export NCBI_EMAIL="you@example.org"      # REQUIRED
+export NCBI_API_KEY="<your key>"         # optional
+```
+
+| variable | required | why |
+|---|---|---|
+| `NCBI_EMAIL` | **yes**, for any stage that contacts NCBI | NCBI Entrez requires a contact address so it can reach you if a script misbehaves; it is [their stated condition of use](https://www.ncbi.nlm.nih.gov/books/NBK25497/). If it is unset the pipeline exits immediately with instructions and does **not** contact NCBI. |
+| `NCBI_API_KEY` | no | Raises the NCBI rate limit from 3 to 10 requests/second; the pipeline adjusts its own throttle accordingly (0.40 s → 0.12 s between requests). Get one at <https://www.ncbi.nlm.nih.gov/account/settings/>. Stage 1 takes roughly a minute either way. |
+
+**No email address is hardcoded anywhere in this repository**, and none is written into
+any output file. Both variables are read from the environment only. `.env` files are
+gitignored.
+
+### 2. Run the pipeline
+
+Commands are given for Windows; substitute `.venv/bin/python` elsewhere. Runtimes are
+wall-clock on a 2024-era laptop and are dominated by I/O, not CPU, except stage 8.
+
+```powershell
+# --- fast smoke test: 5 genomes end to end, proves the install works -----------
+.venv\Scripts\python.exe run_pipeline.py --limit 5                 # ~10 s, ~1 MB
+
+# --- THE MAIN RUN: stages 1-4, SpCas9, all 183 genomes -------------------------
+.venv\Scripts\python.exe run_pipeline.py                           # ~80 s cold, ~5 s warm
+#   downloads ~28 MB, writes ~3 MB of tables
+#   -> results/summary.json, results/guides_ranked.tsv  (the 4,777 / 833 / 644 numbers)
+
+# --- stage 5: denominator robustness -------------------------------------------
+.venv\Scripts\python.exe run_pipeline.py --robustness              # ~6 min, downloads ~80 MB once
+.venv\Scripts\python.exe run_pipeline.py --robustness --skip-gene-corpus   # parts A+B only, offline, ~90 s
+
+# --- stage 6: SaCas9 head-to-head vs Amrani et al. 2024 ------------------------
+.venv\Scripts\python.exe run_pipeline.py --skip-fetch --benchmark-sacas9   # ~50 s, offline
+
+# --- stage 7: multiplex escape-probability model -------------------------------
+.venv\Scripts\python.exe run_pipeline.py --skip-fetch --escape     # ~3 min, offline
+
+# --- reconcile stages 6-8 into one recommendation ------------------------------
+.venv\Scripts\python.exe src\reconcile.py                          # ~2 s, offline
+
+# --- figures 1-5 ---------------------------------------------------------------
+.venv\Scripts\python.exe src\figures.py                            # ~30 s, offline
+#   -> figures/fig1..fig5 .png and .pdf
+```
+
+> ### ⚠ Stage 8 needs a 4 GB human genome download. Read this before starting it.
+>
+> The human off-target screen requires the Ensembl release-116 GRCh38 primary assembly
+> and its GTF. That is **~1.0 GB downloaded** and **~4.1 GB occupied on disk** once
+> decompressed into the scanning index, and the scan itself takes **~6 minutes** (319 s
+> measured for 50 guides × 2 strands × 3.10 Gb). None of it is needed for any
+> conservation, joint-coverage or escape result in the paper.
+>
+> The download **never happens implicitly**. If the cache is absent, stage 8 logs why it
+> is skipping and the pipeline continues. To build it you must ask, explicitly and once:
+>
+> ```powershell
+> .venv\Scripts\python.exe src\offtarget.py --stage fetch    # ~1.0 GB down, ~4.1 GB on disk
+> .venv\Scripts\python.exe src\offtarget.py                  # ~6 min
+> ```
+>
+> The download is verified three independent ways — Ensembl's published BSD `sum`
+> checksum, the gzip CRC-32/ISIZE trailer, and a locally computed SHA-256 recorded in
+> `data/genome/genome_manifest.json` — and the release is **pinned, not "current"**, so a
+> floating release cannot silently change the numbers.
+
+### 3. Run the tests
+
+**123 tests across eight files, all offline, no network and no genome download.**
+
+```powershell
+.venv\Scripts\python.exe tests\test_core.py        # 7   conservation scanner
+.venv\Scripts\python.exe tests\test_nuclease.py    # 11  PAM model; scanner == brute force, every PAM
+.venv\Scripts\python.exe tests\test_robustness.py  # 23  stage 5
+.venv\Scripts\python.exe tests\test_benchmark.py   # 6   stage 6
+.venv\Scripts\python.exe tests\test_escape.py      # 31  stage 7
+.venv\Scripts\python.exe tests\test_offtarget.py   # 17  stage 8 (~135 s; no genome needed)
+.venv\Scripts\python.exe tests\test_reconcile.py   # 8   the selection rule, pinned
+.venv\Scripts\python.exe tests\test_figures.py     # 20  figures render byte-identically
+```
+
+The two performance-critical scanners are not merely tested, they are *proved*:
+`tests/test_nuclease.py` asserts set-identity between the jump scanner and a naive
+both-strand substring search for every supported PAM on randomised sequences, GC-rich
+sequences and the real HSV-1 reference, and `tests/test_offtarget.py` asserts set
+identity between the pigeonhole scanner and a structurally independent brute-force scan
+over the whole of chromosome 21. The optimisations are not approximations.
+
+---
+
+## Verify the headline numbers
+
+[`verify.py`](verify.py) checks every number in the tables above against the
+version-controlled result files, and recomputes the Clopper–Pearson resolution floor
+from first principles. **The fast path needs no network, no downloads and under a
+second.**
+
+```powershell
+# FAST PATH -- offline, < 1 s, nothing to download. Start here.
+.venv\Scripts\python.exe verify.py
+#   82 assertions against the pinned, version-controlled results.
+#   Answers: does the archived record actually say what the paper says?
+```
+
+```powershell
+# SLOWER -- recomputes stages 2-4 and checks byte-identity, ~30 s, offline
+# but needs data/raw/ populated (run `run_pipeline.py` once first).
+.venv\Scripts\python.exe verify.py --rerun
+
+# SLOWEST -- also recomputes stages 6 and 7, ~5 min, offline.
+.venv\Scripts\python.exe verify.py --rerun --full
+```
+
+`--rerun` re-runs the pipeline with `--force` and compares every regenerated file
+against the SHA-256 recorded in [`results/CHECKSUMS.sha256`](results/CHECKSUMS.sha256)
+at pin time. That file also pins the large outputs that are *not* version-controlled, so
+byte-identity can be checked for them without shipping 4 MB of TSV.
+
+**Stage 8 is deliberately outside every `verify.py` path**, because it costs 4 GB and
+six minutes and no conservation, joint-coverage or escape claim depends on it. Its
+pinned outputs are still checked on the fast path, from the version-controlled
+`results/offtarget_summary.tsv`. To recompute it yourself, see the warning box above.
+
+---
+
+## Data provenance, and why the retrieval date is the pin
+
+**This analysis is pinned to a retrieval date, not to a query.** That distinction is the
+single most important thing to understand before re-running anything.
+
+The complete-genome corpus was retrieved from NCBI Nucleotide on
+**2026-09-07T21:56:25Z** with the exact query:
+
+```
+txid10298[Organism:exp] AND 145000:160000[SLEN] AND biomol_genomic[PROP]
+  AND "complete genome"[Title] NOT patent[PROP]
+```
+
+NCBI reported and returned **183** records (147,898–159,092 bp). A second, gene-level
+corpus of 4,945 further HSV-1 records was built with two further queries, given in
+Methods 5.1 and written verbatim into the stage-5 report.
+
+**Re-running that query today will return MORE than 183 genomes**, because GenBank
+grows. Every number in the paper and in the tables above is a function of the corpus
+that existed at that timestamp. A reviewer who re-runs the pipeline in a year and gets
+different counts has not found an irreproducibility; they have measured a different,
+larger corpus. That is a property of the field's evidence base — indeed it is the point
+of the resolution-floor argument, which only improves as the corpus grows — and not a
+defect of the code.
+
+The pinned record is therefore two files, both version-controlled:
+
+| file | what it pins |
+|---|---|
+| [`data/manifest.tsv`](data/manifest.tsv) | one row per genome: accession, length, ambiguous-base count, strain, isolate, country, collection date, host, isolation source, definition, completeness label, **SHA-256 of the downloaded FASTA**, plus the exact Entrez query and the UTC retrieval timestamp in every row |
+| [`results/run_log.json`](results/run_log.json) | the full **sorted accession list actually used**, the exact query, the retrieval timestamp, the command line, Python and package versions, which stages executed, and the summary statistics |
+
+To reproduce the paper's numbers exactly rather than to measure today's GenBank, fetch
+the accessions listed in `results/run_log.json` and verify each FASTA against the
+SHA-256 in `data/manifest.tsv`. To measure today's GenBank instead, just run
+`run_pipeline.py` and expect the counts to move.
+
+Two further pins, for the same reason:
+[`data/gene_corpus_manifest.tsv`](data/gene_corpus_manifest.tsv) records the 4,945
+gene-level records per-record, and the human assembly is pinned to **Ensembl release
+116** with a recorded SHA-256 (`d8c3af00…c187b92`, 881,964,081 bytes) rather than to
+"current".
+
+Nothing is ever padded or imputed: if NCBI returns fewer records than its own count
+reports, the shortfall is logged as a warning and the manifest contains exactly what was
+retrieved.
+
+---
+
+## What is in `results/`, and what is not
+
+`results/` is regenerable, so the default is to leave it out of version control. The
+exceptions are tracked deliberately, and the rule is: **a reviewer must be able to check
+any number in the paper without running anything, and must be able to regenerate
+everything.**
+
+**Tracked** (~340 KB total) — small, decision-bearing, or provenance:
+
+* `recommendation.md` and `recommendation_table.tsv` — the reconciliation of stages 6, 7
+  and 8, which proposed three different guides on three different axes. The table is
+  computed; the selection rule and the withdrawals are an argument, and an argument that
+  lives only in an ignored directory is an argument nobody can review.
+* `summary.json`, `run_log.json`, `CHECKSUMS.sha256` — the provenance record of the
+  pinned run, and the SHA-256 of every regenerable file it produced.
+* The four stage reports — `robustness_report.md`, `sacas9_benchmark_report.md`,
+  `escape_model_report.md`, `offtarget_report.md` — each of which carries claims the
+  paper cites.
+* The four machine-readable stage summaries (`*_summary.json`) — every headline number
+  in a form `verify.py` can assert against.
+* Small decision-bearing tables, all under 30 KB: `escape_k_curve*.tsv`,
+  `escape_guide_sets.tsv`, `escape_sensitivity*.tsv`, `escape_tolerance_qc.tsv`,
+  `offtarget_summary.tsv`, `offtarget_annotated.tsv` (the coding-exon context that
+  withdrew one of our own recommendations), `sacas9_benchmark_pool.tsv`,
+  `robustness_redundancy.tsv` and the four tiny robustness tables.
+
+**Not tracked, regenerate them** — bulk per-guide and per-site enumerations totalling
+~4 MB, plus the cached FASTAs and the 4 GB human genome index:
+
+`guides_candidates.tsv`, `conservation.tsv`, `guides_ranked.tsv`,
+`escape_site_parameters.tsv`, `escape_codon_tolerance.tsv`, `offtarget_sites.tsv`,
+`robustness_conservation_modes.tsv`, `robustness_gene_level.tsv`,
+`sacas9_benchmark_pairs.tsv`, the alternative-nuclease re-runs under `results/sacas9*/`,
+and everything under `data/raw/` and `data/genome/`.
+
+Every one of those is pinned by SHA-256 in `results/CHECKSUMS.sha256`, so
+`python verify.py --rerun` can confirm that a regenerated copy is byte-identical to the
+one the paper was written from — without the repository having to carry it.
+
+One file is *deliberately* left untracked even though it is small:
+`data/fetch_summary.json` describes whichever fetch ran last, including a smoke test
+against a different taxon, and a stale copy of it in version control would be actively
+misleading. The provenance records are `data/manifest.tsv` and `results/run_log.json`.
+
+Re-running the pipeline will overwrite the tracked files in `results/`. That is intended:
+`git diff` then shows you exactly what moved relative to the pinned run.
+
+---
+
+## Pipeline stages
+
+Stages 1–4 always run. Stages 5–8 are opt-in, and each skips with an explanatory message
+if its inputs are absent rather than failing.
+
+| Stage | Module | Flag | Cost | Network | Output |
+|---|---|---|---|---|---|
+| 1 | `src/fetch_genomes.py` | (always) | ~60 s, ~28 MB | **yes** | `data/raw/*.fasta`, `data/manifest.tsv` |
+| 2 | `src/extract_guides.py` | (always) | ~5 s | no | `results/guides_candidates.tsv` |
+| 3 | `src/conservation.py` | (always) | ~3 s | no | `results/conservation.tsv` |
+| 4 | `src/report.py` | (always) | ~2 s | no | `results/guides_ranked.tsv`, `results/summary.json` |
+| 5 | `src/robustness.py` | `--robustness` | ~6 min, ~80 MB | **yes** (gene corpus only; `--skip-gene-corpus` for parts A+B offline) | `results/robustness_report.md` + tables |
+| 6 | `src/benchmark_sacas9.py` | `--benchmark-sacas9` | ~50 s | no | `results/sacas9_benchmark_report.md` + tables |
+| 7 | `src/escape.py` | `--escape` | ~3 min | no | `results/escape_model_report.md` + tables |
+| 8 | `src/offtarget.py` | `--offtarget` | **~6 min, ~4.1 GB disk** | **yes, once, explicitly** | `results/offtarget_report.md` + tables |
+| — | `src/reconcile.py` | (standalone) | ~2 s | no | `results/recommendation_table.tsv` |
+| — | `src/figures.py` | (standalone) | ~30 s | no | `figures/fig1–fig5 .png/.pdf` |
+| — | `run_pipeline.py` | — | — | — | `results/run_log.json` |
+
+Outputs are **namespaced by nuclease**. SpCas9 keeps the historical paths
+(`results/guides_ranked.tsv`); any other nuclease writes to `results/<tag>/`
+(`results/sacas9/`, `results/sacas9-nngrrn/`, `results/sacas9-20nt/`), so runs under
+different nucleases never overwrite each other. Stages 6, 7 and 8 are nuclease-fixed by
+construction — they exist to compare against Amrani et al.'s SaCas9 guides in that
+paper's own grammar — and always write to `results/`.
+
+Useful flags: `--force` recomputes every stage (needed if you change a parameter the
+staleness check cannot see), `--skip-fetch` reuses an existing manifest without
+contacting NCBI, `--refresh` bypasses the download cache, `--limit N` takes the first N
+accessions after sorting (so it is deterministic), `-v` enables debug logging. Every
+stage is also runnable on its own: `python src/fetch_genomes.py --help`, and so on.
+Per-stage narrative documentation is under
+[Pipeline stages in detail](#pipeline-stages-in-detail).
+
+Other supported configurations:
+
+```powershell
+.venv\Scripts\python.exe run_pipeline.py --include-partial                      # admit near-full-length "partial genome" isolates
+.venv\Scripts\python.exe run_pipeline.py --max-ambiguous-fraction 0.001         # drop poorly resolved assemblies from the denominator
+.venv\Scripts\python.exe run_pipeline.py --taxid 10310 --reference NC_001798    # HSV-2 instead of HSV-1
+.venv\Scripts\python.exe run_pipeline.py --genes UL30,UL29,UL54                 # a different gene set
+.venv\Scripts\python.exe run_pipeline.py --nuclease sacas9 --skip-fetch         # SaCas9, 21 nt + NNGRRT
+.venv\Scripts\python.exe run_pipeline.py --nuclease sacas9 --pam NNGRRN --skip-fetch
+.venv\Scripts\python.exe run_pipeline.py --nuclease sacas9 --spacer-length 20 --skip-fetch
+```
+
+---
+
+## How to cite
+
+Please cite **both** the preprint and the archived software release.
+
+* **Preprint** — [AUTHOR NAME]. *What a genome corpus can and cannot certify about CRISPR
+  antiviral escape: resolution floors, joint coverage, and a worked audit of an HSV-1
+  guide pair.* bioRxiv (2026). doi:`[BIORXIV-DOI]`
+* **Software** — [AUTHOR NAME]. *Conserved CRISPR-Cas9 target sites in HSV-1* (version
+  1.0.0). Zenodo (2026). doi:`10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]`
+
+GitHub renders [`CITATION.cff`](CITATION.cff) as a "Cite this repository" button that
+emits both, and Zenodo reads [`CITATION.cff`](CITATION.cff) and
+[`.zenodo.json`](.zenodo.json) when minting the DOI from a release tag. The DOI and
+preprint placeholders in those two files, in `manuscript/manuscript.md` and above are
+filled in at deposition; the checklist is [`PUBLISH.md`](PUBLISH.md).
+
+If you use only the escape model or only the off-target scanner, please still cite the
+preprint — the arguments they implement are what make the numbers interpretable.
+
+---
+
+## Licence
+
+**MIT** — see [`LICENSE`](LICENSE). Permissive, OSI-approved, and compatible with every
+dependency (numpy, pandas, matplotlib, contourpy, cycler, kiwisolver and pyparsing are
+BSD-family; biopython uses the BSD-style Biopython License; six, fonttools and pyparsing
+are MIT; pillow is MIT-CMU/HPND; python-dateutil, tzdata and packaging are Apache-2.0 or
+dual-licensed). No dependency carries a copyleft obligation, so nothing forces a
+stronger licence.
+
+`refs/` contains third-party material redistributed under **its own** licences — the
+verbatim CC BY-NC-ND 4.0 full text of Amrani et al. (2024), and a CC BY 4.0 derived
+table from the source data of Ramadoss et al. (2025). The MIT grant does not extend to
+them; see the THIRD-PARTY MATERIAL section at the bottom of [`LICENSE`](LICENSE).
+Sequence data is retrieved at run time from NCBI and Ensembl and is not redistributed
+here.
+
+---
+
+## Repository layout
+
+```
+run_pipeline.py            single entrypoint: stages 1-4 plus opt-in 5-8, and the run log
+verify.py                  check the headline numbers reproduce (fast path, offline, < 1 s)
+requirements.txt           pinned, installed and tested on CPython 3.14.5
+LICENSE                    MIT, plus the third-party notice for refs/
+CITATION.cff               "Cite this repository"; read by GitHub and by Zenodo
+.zenodo.json               deposition metadata for the archived DOI
+PUBLISH.md                 the author's checklist for the GitHub push and the Zenodo mint
+
+src/                       the pipeline (see "Repository layout" detail below)
+tests/                     123 offline tests across eight files
+manuscript/                manuscript.md, references.md
+figures/                   fig1-fig5, .png and .pdf
+refs/                      third-party source material, with extraction notes
+results/                   pinned outputs (tracked by exception; see the policy above)
+data/                      manifests (tracked); raw downloads and the GRCh38 cache (not)
+```
+
+---
+
+# Reference documentation
+
+*Everything below is the working documentation of the analysis: how each measurement is
+defined, what was actually observed at each stage, and where the method fails. It was
+written as the work proceeded and is kept as the detailed record behind the summary
+above.*
 
 ## Method
 
@@ -119,149 +539,11 @@ original column byte-identical, and stages 3-4 reproduce `conservation.tsv`,
 
 ---
 
-## Install
+## Pipeline stages in detail
 
-Verified on **Windows 11, CPython 3.14.5 (64-bit), pip 26.1.1**.
-
-```powershell
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
-```
-
-`--only-binary=:all:` is recommended: it makes pip fail loudly if a cp314 wheel is
-ever missing rather than silently attempting a source build that would need a C
-toolchain.
-
-Python 3.14 wheel availability was tested, not assumed. All three scientific
-packages ship prebuilt `cp314-win_amd64` wheels at the pinned versions:
-
-| Package   | Version | Wheel                                     |
-|-----------|---------|-------------------------------------------|
-| numpy     | 2.5.3   | `numpy-2.5.3-cp314-cp314-win_amd64.whl`   |
-| pandas    | 3.0.5   | `pandas-3.0.5-cp314-cp314-win_amd64.whl`  |
-| biopython | 1.88    | `biopython-1.88-cp314-cp314-win_amd64.whl`|
-
-Note that pandas 3.0 is a major release with behavioural changes from 2.x; the code
-here is written against 3.0 and was run against it.
-
----
-
-## NCBI credentials (required)
-
-NCBI Entrez requires a contact email address. **No email address is hardcoded
-anywhere in this repository.** It is read only from the environment:
-
-```powershell
-$env:NCBI_EMAIL = "you@example.org"      # required
-$env:NCBI_API_KEY = "<your key>"         # optional
-```
-
-```bash
-export NCBI_EMAIL="you@example.org"
-export NCBI_API_KEY="<your key>"
-```
-
-If `NCBI_EMAIL` is unset the pipeline exits immediately with instructions and does
-not contact NCBI. `NCBI_API_KEY` is optional; supplying one raises the NCBI rate
-limit from 3 to 10 requests/second and the pipeline adjusts its throttle
-accordingly. Get a key at <https://www.ncbi.nlm.nih.gov/account/settings/>.
-
-Never commit these values. `.env` files are gitignored.
-
----
-
-## Usage
-
-```bash
-# fast smoke test (5 genomes, ~10 s)
-python run_pipeline.py --limit 5
-
-# full HSV-1 run (~80 s cold, ~5 s warm from cache)
-python run_pipeline.py
-
-# admit near-full-length clinical isolates deposited as "partial genome"
-python run_pipeline.py --include-partial
-
-# exclude poorly resolved assemblies from the denominator
-python run_pipeline.py --max-ambiguous-fraction 0.001
-
-# HSV-2 instead of HSV-1
-python run_pipeline.py --taxid 10310 --reference NC_001798
-
-# a different gene set
-python run_pipeline.py --genes UL30,UL29,UL54
-
-# SaCas9 instead of SpCas9 -- outputs are namespaced under results/sacas9/,
-# so the SpCas9 result set is never overwritten
-python run_pipeline.py --nuclease sacas9 --skip-fetch
-
-# the permissive SaCas9 PAM, and the 20 nt spacer length used by Amrani et al.
-python run_pipeline.py --nuclease sacas9 --pam NNGRRN --skip-fetch
-python run_pipeline.py --nuclease sacas9 --spacer-length 20 --skip-fetch
-
-# stage 6: the SaCas9 head-to-head against Amrani et al. 2024 (offline, ~50 s)
-python run_pipeline.py --skip-fetch --benchmark-sacas9
-python src/benchmark_sacas9.py
-
-# stage 5: robustness / denominator-sensitivity analysis (downloads ~80 MB once)
-python run_pipeline.py --robustness
-
-# ... parts A and B only, no further network access
-python run_pipeline.py --robustness --skip-gene-corpus
-
-# stage 7: the multiplex escape-probability model (offline, ~3 min)
-python run_pipeline.py --skip-fetch --escape
-python src/escape.py
-
-# stage 8: human GRCh38 off-target screening. SKIPPED with an explanatory message
-# unless the genome cache already exists -- ~1.0 GB is downloaded and ~4.1 GB
-# occupied on disk, and that never happens implicitly.
-python src/offtarget.py --stage fetch          # once, explicit, ~4.1 GB on disk
-python run_pipeline.py --skip-fetch --offtarget
-python src/offtarget.py                        # or run the stage on its own
-
-# reconcile stages 6-8 into the joint table behind results/recommendation.md
-python src/reconcile.py
-
-# offline unit tests (no network)
-python tests/test_core.py
-python tests/test_robustness.py
-python tests/test_nuclease.py
-python tests/test_benchmark.py
-python tests/test_escape.py
-python tests/test_offtarget.py
-python tests/test_reconcile.py
-```
-
-Each stage is also runnable on its own: `python src/fetch_genomes.py --help`, etc.
-
-Useful flags: `--force` recomputes every stage (needed if you change parameters that
-the staleness check cannot see), `--skip-fetch` reuses an existing manifest without
-contacting NCBI, `--refresh` bypasses the download cache, `-v` enables debug logging.
-
----
-
-## Pipeline stages
-
-| Stage | Module | Output |
-|-------|--------|--------|
-| 1 | `src/fetch_genomes.py` | `data/raw/*.fasta`, `data/manifest.tsv` |
-| 2 | `src/extract_guides.py` | `results/guides_candidates.tsv` |
-| 3 | `src/conservation.py` | `results/conservation.tsv` |
-| 4 | `src/report.py` | `results/guides_ranked.tsv`, `results/summary.json` |
-| 5 | `src/robustness.py` | `results/robustness_report.md` + supporting TSVs (opt-in, `--robustness`) |
-| 6 | `src/benchmark_sacas9.py` | `results/sacas9_benchmark_report.md` + supporting TSVs (opt-in, `--benchmark-sacas9`) |
-| 7 | `src/escape.py` | `results/escape_model_report.md` + supporting TSVs (opt-in, `--escape`) |
-| 8 | `src/offtarget.py` | `results/offtarget_report.md` + supporting TSVs (opt-in, `--offtarget`) |
-| — | `run_pipeline.py` | `results/run_log.json` |
-| — | `src/reconcile.py` | `results/recommendation_table.tsv` — the joint stage-6/7/8 table behind `results/recommendation.md` |
-
-Outputs are **namespaced by nuclease**. SpCas9 keeps the historical paths
-(`results/guides_ranked.tsv`); any other nuclease writes to `results/<tag>/`
-(`results/sacas9/`, `results/sacas9-nngrrn/`, `results/sacas9-20nt/`), so runs under
-different nucleases never overwrite each other. Stages 6, 7 and 8 are nuclease-fixed
-by construction -- they exist to compare against Amrani et al.'s SaCas9 guides in
-that paper's own grammar -- and always write to `results/`.
+The summary table, with runtimes and disk cost, is under
+[Pipeline stages](#pipeline-stages) above. This section is the per-stage narrative:
+what each one actually does and which decisions inside it are load-bearing.
 
 **A note on stage numbering.** Stages 7 and 8 were developed concurrently and both
 were called "stage 7" in their first drafts. This repository fixes **escape = stage
@@ -908,7 +1190,7 @@ Read these before using any guide from this table.
 
 ---
 
-## Reproducibility
+## Reproducibility: the full output inventory
 
 * Deterministic throughout: accessions sorted before `--limit`, stable sorts in every
   table, no random seeds anywhere in the pipeline.
@@ -952,9 +1234,10 @@ the gzip CRC-32/ISIZE trailer, and a SHA-256 recorded in
 "current", so a floating release cannot silently change the numbers.
 
 `results/recommendation.md` reconciles stages 6, 7 and 8 into one recommendation. It
-is the only file under `results/` that is version-controlled, because it is a written
-argument across stages rather than a regenerable table. Its numbers are not typed by
-hand: `python src/reconcile.py` joins the three stages' outputs on `guide_id`,
+is version-controlled because it is a written argument across stages rather than a
+regenerable table; the tracking policy for the rest of `results/` is under
+[What is in `results/`, and what is not](#what-is-in-results-and-what-is-not). Its
+numbers are not typed by hand: `python src/reconcile.py` joins the three stages' outputs on `guide_id`,
 computes the one quantity none of them produced — P(escape) for each ICP0 candidate
 paired with ICP27g1 — evaluates Pareto dominance mechanically, applies the document's
 selection rule from constants in that module, and writes
@@ -969,18 +1252,30 @@ and rank) and `results/sacas9_benchmark_pairs.tsv` (all 1,610 ICP0 x ICP27 pairs
 joint conservation). It runs entirely offline from the caches populated by stages 1
 and 5.
 
-`data/raw/`, `results/` and the run-specific manifests are gitignored: they are
-regenerable, and a stale or smoke-test copy in version control would be misleading.
-Archive `data/manifest.tsv`, `data/gene_corpus_manifest.tsv` and
-`results/run_log.json` alongside a manuscript — those files plus this repository fully
-determine the results.
+`data/raw/` and `data/genome/` are gitignored, as are the bulk per-guide and per-site
+tables under `results/`: they are regenerable, and `results/CHECKSUMS.sha256` pins
+every one of them by SHA-256 so a regenerated copy can be checked byte-for-byte. The
+provenance records `data/manifest.tsv`, `data/gene_corpus_manifest.tsv` and
+`results/run_log.json` **are** version-controlled — those files plus this repository
+fully determine the results. The full policy, and the reasoning behind each side of
+it, is under [What is in `results/`, and what is not](#what-is-in-results-and-what-is-not).
+
+One caveat on `results/run_log.json`: it is the log of the invocation that produced
+the pinned stage-1–4 and stage-7 tables (`--skip-fetch --force --escape`), so its
+`robustness`, `sacas9_benchmark` and `offtarget` keys are `null`. Those stages were
+run separately and their own records are `results/robustness_summary.json`,
+`results/sacas9_benchmark_summary.json` and `results/offtarget_summary.json`, each
+with its own generation timestamp. The corpus pin — query, retrieval timestamp and
+the full sorted accession list — is in `run_log.json` and is the same for all of
+them.
 
 ---
 
-## Layout
+## Source layout in detail
 
 ```
 run_pipeline.py          single entrypoint, stages 1-4 plus opt-in 5-8, run log
+verify.py                headline-number verification; fast path is offline and < 1 s
 src/common.py            paths, logging, Entrez config, rate limit, retry, seq utils
 src/fetch_genomes.py     stage 1 - NCBI retrieval + manifest
 src/extract_guides.py    stage 2 - SpCas9 site enumeration from GenBank annotation
@@ -1000,6 +1295,13 @@ tests/test_benchmark.py  offline unit tests for stage 6 (no network)
 tests/test_escape.py     offline unit tests for stage 7 (no network)
 tests/test_offtarget.py  offline unit tests for stage 8 (no network, no genome needed)
 tests/test_reconcile.py  the selection rule of results/recommendation.md, pinned
+tests/test_figures.py    figures 1-5 render byte-identically from the pinned tables
+src/figures.py           figures 1-5 (.png and .pdf), rendered from results/
 results/recommendation.md  the reconciled single recommendation across stages 6-8
+results/CHECKSUMS.sha256   SHA-256 of every deterministic output of the pinned run
 requirements.txt         pinned, installed and tested on CPython 3.14.5
+LICENSE                  MIT, plus the third-party notice covering refs/
+CITATION.cff             "Cite this repository"; read by GitHub and by Zenodo
+.zenodo.json             deposition metadata for the archived DOI
+PUBLISH.md               the author's checklist for the GitHub push and Zenodo mint
 ```

@@ -1,28 +1,80 @@
 # --- pipeline data products (regenerable; excluded on purpose) -----------------
-# Downloaded genomes. Re-created byte-identically by `python run_pipeline.py`
-# using the Entrez query + retrieval date recorded in data/manifest.tsv.
+# Downloaded genomes. Re-created by `python run_pipeline.py` using the Entrez
+# query recorded in data/manifest.tsv -- but note that re-running LATER returns
+# MORE records as GenBank grows, so the pinned corpus is the manifest, not the
+# query. See "Data provenance" in README.md.
 data/raw/
 
-# All computed tables (guides_candidates.tsv, conservation.tsv, guides_ranked.tsv,
-# summary.json, run_log.json). `results/*` rather than `results/` so that the
-# single exception below can be re-included: git does not descend into an
+# The GRCh38 cache for stage 8: ~4.1 GB on disk. Never downloaded implicitly.
+data/genome/
+
+# The fetch summary describes whichever fetch ran last -- including a smoke test
+# against a different taxon. It is a scratch file, not a provenance record; the
+# provenance records are data/manifest.tsv and results/run_log.json, both of
+# which ARE tracked.
+data/fetch_summary.json
+
+# --- results: tracked by exception, not by default -----------------------------
+# Everything under results/ is regenerable, so the default is to ignore it and
+# let `python run_pipeline.py` rebuild it. `results/*` rather than `results/` so
+# that the exceptions below can be re-included: git does not descend into an
 # ignored DIRECTORY, so a negation inside one would never be consulted.
+#
+# The exceptions are the small, decision-bearing outputs -- the ones a reviewer
+# needs in order to check a number in the paper without running anything, and
+# the ones that carry an argument rather than a table. The bulk per-guide and
+# per-site enumerations stay out: they are large, they are mechanical, and
+# `results/CHECKSUMS.sha256` (tracked) pins them byte-for-byte anyway.
 results/*
 
-# ... with one deliberate exception. results/recommendation.md is not a regenerable
-# table: it is the written reconciliation of stages 6, 7 and 8, which proposed three
-# different guides on three different axes. Every number in it is reproducible from
-# the TSVs above, but the selection rule and the withdrawals are an argument, and an
-# argument that lives only in an ignored directory is an argument nobody can review.
+# The written argument, and the joint table it is computed from.
 !results/recommendation.md
+!results/recommendation_table.tsv
 
-# The manifest and fetch summary are run artifacts too. They are the
-# reproducibility record for a *specific* run, so they are archived alongside a
-# manuscript rather than committed to the repo, where a stale or smoke-test
-# version would be actively misleading.
-data/manifest.tsv
-data/fetch_summary.json
-data/gene_corpus_manifest.tsv
+# The provenance record of the pinned run, and the SHA-256 of every regenerable
+# file it produced -- so a re-run can be checked byte-for-byte against it.
+!results/summary.json
+!results/run_log.json
+!results/CHECKSUMS.sha256
+
+# Stage reports: human-readable, and each one carries claims the paper cites.
+!results/robustness_report.md
+!results/sacas9_benchmark_report.md
+!results/escape_model_report.md
+!results/offtarget_report.md
+
+# Machine-readable stage summaries: every headline number, in a form verify.py
+# can assert against.
+!results/robustness_summary.json
+!results/sacas9_benchmark_summary.json
+!results/escape_summary.json
+!results/offtarget_summary.json
+
+# Small decision-bearing tables (all < 30 KB).
+!results/robustness_effective_n.tsv
+!results/robustness_ambiguity_sweep.tsv
+!results/robustness_gene_level_by_gene.tsv
+!results/robustness_gene_records.tsv
+!results/robustness_benchmark_guides.tsv
+!results/robustness_redundancy.tsv
+!results/sacas9_benchmark_pool.tsv
+!results/escape_k_curve.tsv
+!results/escape_k_curve_one_per_gene.tsv
+!results/escape_guide_sets.tsv
+!results/escape_sensitivity.tsv
+!results/escape_sensitivity_sets.tsv
+!results/escape_tolerance_qc.tsv
+!results/offtarget_summary.tsv
+!results/offtarget_annotated.tsv
+
+# NOT tracked, and why: results/guides_candidates.tsv, results/conservation.tsv,
+# results/guides_ranked.tsv, results/escape_site_parameters.tsv,
+# results/escape_codon_tolerance.tsv, results/offtarget_sites.tsv,
+# results/robustness_conservation_modes.tsv, results/robustness_gene_level.tsv
+# and results/sacas9_benchmark_pairs.tsv are per-guide or per-site enumerations
+# totalling ~4 MB; results/sacas9*/ are alternative-nuclease re-runs of stages
+# 2-4. All are regenerated exactly by the pipeline and pinned by
+# results/CHECKSUMS.sha256.
 
 # --- Python -------------------------------------------------------------------
 .venv/

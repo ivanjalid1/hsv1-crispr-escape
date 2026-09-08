@@ -1,0 +1,17 @@
+accession	gene	resolved_fraction	verdict
+LT594107.1	RL2	0.918	dropped: coverage
+LT594110.1	RL2	0.9437	dropped: coverage
+LT594111.1	RL2	0.8771	dropped: coverage
+MH319852.1	RL2	0.9197	dropped: coverage
+ON783214.1	RL2	0.6559	dropped: coverage
+ON783214.1	UL29	0.9424	dropped: coverage
+ON783214.1	UL54	0.8895	dropped: coverage
+ON783215.1	RL2	0.674	dropped: coverage
+ON783215.1	UL54	0.8499	dropped: coverage
+ON783216.1	RL2	0.7973	dropped: coverage
+ON783216.1	UL19	0.9168	dropped: coverage
+ON783216.1	UL29	0.9073	dropped: coverage
+ON783216.1	UL5	0.8826	dropped: coverage
+ON783216.1	UL54	0.9298	dropped: coverage
+ON783217.1	RL2	0.6735	dropped: coverage
+ON783217.1	UL54	0.8661	dropped: coverage

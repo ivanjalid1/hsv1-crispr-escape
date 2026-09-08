@@ -1,0 +1,76 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software or its results, please cite both the software
+  (this record) and the preprint listed under preferred-citation.
+title: >-
+  Conserved CRISPR-Cas9 target sites in HSV-1: alignment-free conservation,
+  multiplex escape modelling and human off-target screening
+abstract: >-
+  Analysis code for a computational audit of multiplex CRISPR antiviral guide
+  design against herpes simplex virus type 1. The pipeline retrieves every
+  complete HSV-1 genome in GenBank, enumerates SpCas9 and SaCas9 target sites
+  inside seven essential genes from the reference annotation, scores
+  conservation by exact alignment-free substring presence, and adds four
+  opt-in stages: denominator robustness, a SaCas9 head-to-head against the
+  EBT-104 guide set of Amrani et al. 2024, a quantitative multiplex
+  escape-probability model over a per-genome presence matrix, and an exact
+  human GRCh38 off-target screen. Dependency-light pure Python; no aligner and
+  no compiled tooling.
+type: software
+
+# ---------------------------------------------------------------------------
+# PLACEHOLDERS -- fill these in before the first public push. See PUBLISH.md.
+# ---------------------------------------------------------------------------
+authors:
+  - given-names: "[AUTHOR GIVEN NAME]"
+    family-names: "[AUTHOR FAMILY NAME]"
+    affiliation: "[AFFILIATION - independent researcher]"
+    # Uncomment and fill. It is left commented out because the CFF schema validates
+    # the ORCID format strictly, and a placeholder here would make the whole file
+    # invalid -- which would silently remove GitHub's "Cite this repository" button.
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+
+repository-code: "https://github.com/[GITHUB-USER]/[REPO-NAME]"
+url: "https://github.com/[GITHUB-USER]/[REPO-NAME]"
+license: MIT
+version: "1.0.0"
+# Uncomment and set to the date of the release, in YYYY-MM-DD form. Commented out
+# for the same reason as orcid above: the schema validates it as a date.
+# date-released: 2026-01-01
+
+# The Zenodo DOI minted from the release tag. Zenodo reads this file, so this
+# field must be the CONCEPT DOI (the one that always resolves to the latest
+# version), not a version-specific DOI.
+doi: "10.5281/zenodo.[ZENODO-CONCEPT-RECORD-ID]"
+
+keywords:
+  - CRISPR
+  - Cas9
+  - SaCas9
+  - herpes simplex virus
+  - HSV-1
+  - guide RNA design
+  - sequence conservation
+  - viral escape
+  - off-target
+  - reproducible research
+
+# ---------------------------------------------------------------------------
+# The preprint this repository backs. Fill in the bioRxiv DOI and the posting
+# date once the preprint is live; until then these remain placeholders.
+# ---------------------------------------------------------------------------
+preferred-citation:
+  type: article
+  title: >-
+    What a genome corpus can and cannot certify about CRISPR antiviral escape:
+    resolution floors, joint coverage, and a worked audit of an HSV-1 guide
+    pair
+  authors:
+    - given-names: "[AUTHOR GIVEN NAME]"
+      family-names: "[AUTHOR FAMILY NAME]"
+      affiliation: "[AFFILIATION - independent researcher]"
+      # orcid: "https://orcid.org/0000-0000-0000-0000"
+  year: 2026
+  journal: bioRxiv
+  doi: "10.1101/[BIORXIV-DOI-SUFFIX]"
+  url: "https://doi.org/10.1101/[BIORXIV-DOI-SUFFIX]"

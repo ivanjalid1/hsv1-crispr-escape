@@ -1,0 +1,65 @@
+{
+  "upload_type": "software",
+  "title": "Conserved CRISPR-Cas9 target sites in HSV-1: alignment-free conservation, multiplex escape modelling and human off-target screening",
+  "description": "<p>Analysis code for a computational audit of multiplex CRISPR antiviral guide design against herpes simplex virus type 1 (HSV-1), and the archived record of the run reported in the accompanying preprint.</p><p>The pipeline retrieves every complete HSV-1 genome in GenBank (183 records at the pinned retrieval date 2026-09-07T21:56:25Z), enumerates SpCas9 (<code>NGG</code>) and SaCas9 (<code>NNGRRT</code>/<code>NNGRRN</code>) target sites inside seven essential or high-value genes from the reference annotation of NC_001806.2, and scores conservation as exact alignment-free substring presence of the full protospacer-plus-PAM footprint on either strand. Four opt-in stages extend it: denominator robustness (MinHash redundancy, ambiguity sweep, a 4,945-record gene-level corpus), a SaCas9 head-to-head against the EBT-104 guide set of Amrani et al. 2024, a quantitative multiplex escape-probability model computed over a per-genome presence matrix rather than over marginal conservations, and an exact human GRCh38 off-target screen (Ensembl release 116, primary assembly, unmasked, up to 4 mismatches, both strands).</p><p>Headline results of the archived run: 4,777 SpCas9 candidate sites across the seven genes, of which 833 (17.4%) are present in all 183 genomes and 644 also pass poly-T, homopolymer and GC filters; the Clopper-Pearson 95% upper limit on an absence frequency of 0/183 is 0.0162, which sets a corpus resolution floor of ~1.6e-2 for one site and ~2.6e-4 for a pair; the published EBT-104 lead pair has marginal conservations 0.847 and 0.978 but joint intactness 0.8251, below either marginal; and 25 of 183 genomes carry an identical recurrent G-to-A substitution at spacer position 9 of the ICP0g2 target site.</p><p>Implementation is dependency-light pure Python (Biopython, pandas, numpy, matplotlib) on CPython 3.14 - no external aligner and no compiled tooling. Both performance-critical scanners are proved correct by set-identity assertions against structurally independent brute-force implementations. 123 offline tests across eight files.</p><p>See README.md for a reproduce-from-clone walkthrough with runtimes and disk requirements, and verify.py for a fast check that the headline numbers reproduce.</p>",
+  "creators": [
+    {
+      "name": "[AUTHOR FAMILY NAME], [AUTHOR GIVEN NAME]",
+      "affiliation": "[AFFILIATION - independent researcher]",
+      "orcid": "[ORCID]"
+    }
+  ],
+  "license": "mit",
+  "access_right": "open",
+  "language": "eng",
+  "version": "1.0.0",
+  "keywords": [
+    "CRISPR",
+    "Cas9",
+    "SaCas9",
+    "guide RNA design",
+    "herpes simplex virus",
+    "HSV-1",
+    "antiviral",
+    "sequence conservation",
+    "viral escape",
+    "multiplex editing",
+    "off-target screening",
+    "GRCh38",
+    "reproducible research",
+    "computational biology"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1101/[BIORXIV-DOI-SUFFIX]",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/[GITHUB-USER]/[REPO-NAME]",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "10.1016/j.omtm.2024.101303",
+      "relation": "cites",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.1038/s41467-025-66058-3",
+      "relation": "cites",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.6084/m9.figshare.30366298.v1",
+      "relation": "cites",
+      "resource_type": "dataset",
+      "scheme": "doi"
+    }
+  ],
+  "notes": "Input sequence data is not redistributed here: it is retrieved at run time from NCBI Nucleotide and Ensembl. The pinned provenance record for the run reported in the preprint is data/manifest.tsv (per-genome accession, length, ambiguous-base count, metadata and SHA-256, plus the exact Entrez query and UTC retrieval timestamp) together with results/run_log.json. Re-running the retrieval at a later date will return MORE than 183 genomes as GenBank grows, and the numbers will move; results are pinned to the retrieval date, not to the query. refs/ contains third-party material redistributed under its own licences (CC BY-NC-ND 4.0 and CC BY 4.0) - see the THIRD-PARTY MATERIAL section of LICENSE."
+}

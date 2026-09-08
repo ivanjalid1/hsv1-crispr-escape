@@ -1,0 +1,7 @@
+ani_threshold	n_clusters	n_genomes_collapsed	largest_cluster	n_perfectly_conserved	pct_perfectly_conserved
+0.9999	153	30	5	833	17.438
+0.999	132	51	9	857	17.94
+0.998	107	76	18	906	18.966
+0.995	20	163	151	1948	40.779
+0.99	5	178	179	2922	61.168
+0.98	1	182	183	4356	91.187

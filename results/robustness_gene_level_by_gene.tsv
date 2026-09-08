@@ -1,0 +1,8 @@
+gene	guides	median_subgenomic_records	max_subgenomic_records	perfect_at_183_with_usable_n	of_those_below_0.95_subgenomic	min_subgenomic_conservation_of_perfect
+RL2	713	27	38	91	0	0.9667
+UL19	959	34	36	247	13	0.8889
+UL29	783	43	56	124	1	0.9302
+UL30	794	326	538	104	0	0.9601
+UL5	483	107	311	94	0	0.9533
+UL52	673	83	101	121	1	0.9167
+UL54	372	42	44	52	0	0.9762

@@ -1,0 +1,78 @@
+{
+  "generated_utc": "2026-09-08T05:18:00Z",
+  "reference": "NC_001806.2",
+  "nuclease": {
+    "nuclease": "sacas9",
+    "spacer_length": 20,
+    "pam": "NNGRRT",
+    "pam_side": "3prime",
+    "target_length": 26,
+    "tag": "sacas9-20nt",
+    "description": "Staphylococcus aureus Cas9; 21 nt spacer, 3' NNGRRT PAM. Used by Amrani et al. 2024 (EBT-104), whose Table 1 reports 20 nt DNA spacers -- pass --spacer-length 20 to reproduce that exact site space."
+  },
+  "n_complete_genomes": 183,
+  "n_corpus_records": 4945,
+  "pool_sizes": {
+    "RL2_ICP0": 46,
+    "UL54_ICP27": 35
+  },
+  "amrani_guides": {
+    "ICP0g1": {
+      "gene": "RL2",
+      "rank_in_gene": 12,
+      "n_sites_better_conserved": 11,
+      "conservation_complete_genomes": 0.983607,
+      "conservation_gene_level": 0.983491,
+      "gc_content": 0.8,
+      "local_gc_200bp": 0.735,
+      "passes_filters": false
+    },
+    "ICP0g2": {
+      "gene": "RL2",
+      "rank_in_gene": 31,
+      "n_sites_better_conserved": 30,
+      "conservation_complete_genomes": 0.846995,
+      "conservation_gene_level": 0.8975,
+      "gc_content": 0.6,
+      "local_gc_200bp": 0.84,
+      "passes_filters": true
+    },
+    "ICP27g1": {
+      "gene": "UL54",
+      "rank_in_gene": 12,
+      "n_sites_better_conserved": 11,
+      "conservation_complete_genomes": 0.978142,
+      "conservation_gene_level": 0.990826,
+      "gc_content": 0.6,
+      "local_gc_200bp": 0.59,
+      "passes_filters": true
+    },
+    "ICP27g2": {
+      "gene": "UL54",
+      "rank_in_gene": 19,
+      "n_sites_better_conserved": 16,
+      "conservation_complete_genomes": 0.972678,
+      "conservation_gene_level": 0.995215,
+      "gc_content": 0.65,
+      "local_gc_200bp": 0.795,
+      "passes_filters": true
+    }
+  },
+  "icp0_sites_beating_icp0g2": 30,
+  "icp0_sites_beating_icp0g2_passing_filters": 12,
+  "icp0_sites_beating_icp0g2_perfectly_conserved": 4,
+  "icp27_sites_beating_icp27g1": 11,
+  "lead_pair": {
+    "icp0": "RL2_4496+",
+    "icp27": "UL54_115156+",
+    "n_genomes_both_present": 151,
+    "joint_conservation": 0.825137
+  },
+  "best_filtered_pair": {
+    "icp0": "RL2_3441+",
+    "icp27": "UL54_114833-",
+    "joint_conservation": 1.0
+  },
+  "n_filtered_pairs_beating_lead": 258,
+  "n_filtered_pairs_perfect": 8
+}

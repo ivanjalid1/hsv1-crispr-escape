@@ -1,0 +1,649 @@
+{
+  "started_utc": "2026-09-08T16:12:24Z",
+  "finished_utc": "2026-09-08T16:13:07Z",
+  "elapsed_seconds": 43.27,
+  "python_version": "3.14.5",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "package_versions": {
+    "biopython": "1.88",
+    "pandas": "3.0.5",
+    "numpy": "2.5.3"
+  },
+  "command_line": [
+    "run_pipeline.py",
+    "--skip-fetch",
+    "--force",
+    "--escape"
+  ],
+  "stages_executed": [
+    "extract_guides",
+    "conservation",
+    "report",
+    "escape"
+  ],
+  "taxid": 10298,
+  "reference_accession": "NC_001806.2",
+  "target_genes": "UL30,UL19,UL5,UL52,UL29,RL2,UL54",
+  "nuclease": {
+    "nuclease": "spcas9",
+    "spacer_length": 20,
+    "pam": "NGG",
+    "pam_side": "3prime",
+    "target_length": 23,
+    "tag": "spcas9",
+    "description": "Streptococcus pyogenes Cas9; canonical 20 nt spacer, 3' NGG PAM."
+  },
+  "entrez_query": "txid10298[Organism:exp] AND 145000:160000[SLEN] AND biomol_genomic[PROP] AND \"complete genome\"[Title] NOT patent[PROP]",
+  "retrieval_date_utc": "2026-09-07T21:56:25Z",
+  "n_genomes_used": 183,
+  "accessions_used": [
+    "AB618031.1",
+    "BK012101.1",
+    "GU734771.1",
+    "GU734772.1",
+    "JN555585.1",
+    "JQ673480.1",
+    "JQ780693.1",
+    "KF498959.1",
+    "KJ847330.1",
+    "KT887224.1",
+    "KT899744.1",
+    "KX424525.1",
+    "KY922718.1",
+    "KY922719.1",
+    "LT594105.1",
+    "LT594106.1",
+    "LT594107.1",
+    "LT594108.1",
+    "LT594109.1",
+    "LT594110.1",
+    "LT594111.1",
+    "LT594112.1",
+    "LT594192.1",
+    "LT594457.1",
+    "MF156584.1",
+    "MH102298.1",
+    "MH319852.1",
+    "MH999839.1",
+    "MH999840.1",
+    "MH999841.1",
+    "MH999842.1",
+    "MH999844.1",
+    "MH999845.1",
+    "MH999846.1",
+    "MH999847.1",
+    "MH999848.1",
+    "MH999849.1",
+    "MH999850.1",
+    "MH999851.1",
+    "MN136523.1",
+    "MN136524.1",
+    "MN159377.1",
+    "MN159378.1",
+    "MN159379.1",
+    "MN159383.1",
+    "MN925871.1",
+    "NC_001806.2",
+    "ON007132.1",
+    "ON007136.1",
+    "ON007142.1",
+    "ON007143.1",
+    "ON007144.1",
+    "ON007145.1",
+    "ON007149.1",
+    "ON007151.1",
+    "ON007154.1",
+    "ON007158.1",
+    "ON152715.1",
+    "ON152716.1",
+    "ON513441.1",
+    "ON783214.1",
+    "ON783215.1",
+    "ON783216.1",
+    "ON783217.1",
+    "ON960054.1",
+    "ON960055.1",
+    "ON960056.1",
+    "ON960057.1",
+    "ON960058.1",
+    "ON960059.1",
+    "ON960060.1",
+    "ON960061.1",
+    "OP297860.1",
+    "OP297861.1",
+    "OP297862.1",
+    "OP297863.1",
+    "OP297865.1",
+    "OP297866.1",
+    "OP297867.1",
+    "OP297868.1",
+    "OP297870.1",
+    "OP297871.1",
+    "OP297872.1",
+    "OP297873.1",
+    "OP297874.1",
+    "OP297875.1",
+    "OP297877.1",
+    "OP297879.1",
+    "OP297880.1",
+    "OP297881.1",
+    "OP297882.1",
+    "OP297884.1",
+    "OP297885.1",
+    "OP297886.1",
+    "OP871840.1",
+    "OP871841.1",
+    "OP871842.1",
+    "OP871843.1",
+    "OP871844.1",
+    "OP871845.1",
+    "OP871846.1",
+    "OP871847.1",
+    "OP871848.1",
+    "OP871849.1",
+    "OP871850.1",
+    "OP871851.1",
+    "OP871852.1",
+    "OP871854.1",
+    "OP871855.1",
+    "OP871856.1",
+    "OP871857.1",
+    "OP871858.1",
+    "OP871859.1",
+    "OQ724831.1",
+    "OQ724832.1",
+    "OQ724833.1",
+    "OQ724834.1",
+    "OQ724835.1",
+    "OQ724836.1",
+    "OQ724863.1",
+    "OQ724864.1",
+    "OQ724865.1",
+    "OQ724866.1",
+    "OQ724867.1",
+    "OQ724868.1",
+    "OQ724888.1",
+    "OQ724889.1",
+    "OQ724890.1",
+    "OQ724891.1",
+    "OQ724892.1",
+    "OQ724893.1",
+    "OQ724894.1",
+    "OQ724895.1",
+    "OQ724910.1",
+    "OQ724911.1",
+    "OQ724912.1",
+    "OQ724914.1",
+    "OQ724915.1",
+    "OQ724932.1",
+    "OQ724933.1",
+    "OQ724934.1",
+    "OQ724935.1",
+    "OQ724936.1",
+    "OQ724938.1",
+    "OQ724939.1",
+    "OQ724940.1",
+    "OQ724941.1",
+    "OR405519.1",
+    "OR723971.1",
+    "OR771672.1",
+    "OR771685.1",
+    "OZ348666.1",
+    "OZ348811.1",
+    "OZ348988.1",
+    "OZ348992.1",
+    "OZ349004.1",
+    "PQ569920.1",
+    "PV146402.1",
+    "PV146403.1",
+    "PX763612.1",
+    "PX969520.1",
+    "PZ169677.1",
+    "PZ169678.1",
+    "PZ169679.1",
+    "PZ169681.1",
+    "PZ169683.1",
+    "PZ169687.1",
+    "PZ169688.1",
+    "PZ169689.1",
+    "PZ169690.1",
+    "PZ169693.1",
+    "PZ169694.1",
+    "PZ169695.1",
+    "PZ169696.1",
+    "PZ169698.1",
+    "PZ169709.1",
+    "PZ169710.1",
+    "PZ169711.1",
+    "PZ169713.1",
+    "PZ169716.1",
+    "PZ169717.1",
+    "PZ169719.1",
+    "X14112.1"
+  ],
+  "n_candidate_guides": 4777,
+  "n_ranked_guides": 4777,
+  "summary": {
+    "n_guides": 4777,
+    "n_strains_total": 183,
+    "conservation_cumulative_counts": {
+      "== 1.00 (perfect)": 833,
+      ">= 0.99": 1465,
+      ">= 0.95": 3431,
+      ">= 0.90": 3892,
+      ">= 0.50": 4442,
+      "== 0.00": 0
+    },
+    "conservation_mean": 0.901334,
+    "conservation_median": 0.978142,
+    "conservation_min": 0.04918,
+    "n_has_polyT": 119,
+    "n_gc_out_of_range": 1366,
+    "n_passing_all_filters": 644,
+    "perfectly_conserved_per_gene": {
+      "RL2": 91,
+      "UL19": 247,
+      "UL29": 124,
+      "UL30": 104,
+      "UL5": 94,
+      "UL52": 121,
+      "UL54": 52
+    }
+  },
+  "offtarget_screening": {
+    "implemented": true,
+    "ran_in_this_invocation": false,
+    "skipped_because": null,
+    "caveat": "Off-target screening was NOT performed in this run. The guides in this run's tables have not been checked against the human genome here. Stage 8 (`python run_pipeline.py --offtarget`, or `python src/offtarget.py`) implements that screen for the stage-6 SaCas9 benchmark guide set; its results are in results/offtarget_report.md and cover that guide set only."
+  },
+  "robustness": null,
+  "sacas9_benchmark": null,
+  "escape": {
+    "generated": "2026-09-08T16:12:47Z",
+    "nuclease": {
+      "nuclease": "sacas9",
+      "spacer_length": 20,
+      "pam": "NNGRRT",
+      "pam_side": "3prime",
+      "target_length": 26,
+      "tag": "sacas9-20nt",
+      "description": "Staphylococcus aureus Cas9; 21 nt spacer, 3' NNGRRT PAM. Used by Amrani et al. 2024 (EBT-104), whose Table 1 reports 20 nt DNA spacers -- pass --spacer-length 20 to reproduce that exact site space."
+    },
+    "n_genomes": 183,
+    "n_sites": 449,
+    "genes": [
+      "UL30",
+      "UL19",
+      "UL5",
+      "UL52",
+      "UL29",
+      "RL2",
+      "UL54"
+    ],
+    "indel_spectrum": {
+      "name": "parametric-default",
+      "provenance": "ASSUMPTION",
+      "inframe_fraction": 0.19857139042438315,
+      "p_wt": 0.4,
+      "mean_deletion_length": 5.998935160396544
+    },
+    "params": {
+      "tol_variable": 0.5,
+      "tol_invariant": 0.05,
+      "min_variant_strains": 1,
+      "repeat_model": "redundant",
+      "p_disrupt": 1.0,
+      "frameshift_viability": {}
+    },
+    "amrani_lead_pair": {
+      "guides": [
+        "RL2_4496+",
+        "UL54_115156+"
+      ],
+      "joint_conservation": 0.825136612021858,
+      "p_escape": 0.0009719879026815389
+    },
+    "k_curve": [
+      {
+        "k": 1,
+        "p_escape_best": 0.00475423268917531,
+        "p_escape_if_independent": 0.00475423268917531,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+",
+        "genes": "UL19",
+        "below_0.001": false,
+        "below_1e-06": false
+      },
+      {
+        "k": 2,
+        "p_escape_best": 2.260272846282309e-05,
+        "p_escape_if_independent": 2.26027284628231e-05,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL19_37448-",
+        "genes": "UL19;UL19",
+        "below_0.001": true,
+        "below_1e-06": false
+      },
+      {
+        "k": 3,
+        "p_escape_best": 1.074586305225068e-07,
+        "p_escape_if_independent": 1.074586305225068e-07,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL19_37448-;UL19_37908+",
+        "genes": "UL19;UL19;UL19",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 4,
+        "p_escape_best": 5.108833339641135e-10,
+        "p_escape_if_independent": 5.108833339641135e-10,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+",
+        "genes": "UL19;UL19;UL19;UL19",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 5,
+        "p_escape_best": 2.4288582466870552e-12,
+        "p_escape_if_independent": 2.4288582466870556e-12,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+",
+        "genes": "UL19;UL19;UL19;UL19;UL19",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 6,
+        "p_escape_best": 1.154735727377263e-14,
+        "p_escape_if_independent": 1.1547357273772629e-14,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+;UL29_58709-",
+        "genes": "UL19;UL19;UL19;UL19;UL19;UL29",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 7,
+        "p_escape_best": 5.489882342455611e-17,
+        "p_escape_if_independent": 5.489882342455613e-17,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+;UL29_58709-;UL29_61292+",
+        "genes": "UL19;UL19;UL19;UL19;UL19;UL29;UL29",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 8,
+        "p_escape_best": 2.61001780922288e-19,
+        "p_escape_if_independent": 2.61001780922288e-19,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL19_37448-;UL19_37908+;UL19_38322+;UL19_39276+;UL29_58709-;UL29_61292+;UL29_61578+",
+        "genes": "UL19;UL19;UL19;UL19;UL19;UL29;UL29;UL29",
+        "below_0.001": true,
+        "below_1e-06": true
+      }
+    ],
+    "minimum_k": {
+      "0.001": 2,
+      "1e-06": 3
+    },
+    "best_sets": {
+      "1": [
+        "UL19_36407+"
+      ],
+      "2": [
+        "UL19_36407+",
+        "UL19_37448-"
+      ],
+      "3": [
+        "UL19_36407+",
+        "UL19_37448-",
+        "UL19_37908+"
+      ],
+      "4": [
+        "UL19_36407+",
+        "UL19_37448-",
+        "UL19_37908+",
+        "UL19_38322+"
+      ],
+      "5": [
+        "UL19_36407+",
+        "UL19_37448-",
+        "UL19_37908+",
+        "UL19_38322+",
+        "UL19_39276+"
+      ],
+      "6": [
+        "UL19_36407+",
+        "UL19_37448-",
+        "UL19_37908+",
+        "UL19_38322+",
+        "UL19_39276+",
+        "UL29_58709-"
+      ],
+      "7": [
+        "UL19_36407+",
+        "UL19_37448-",
+        "UL19_37908+",
+        "UL19_38322+",
+        "UL19_39276+",
+        "UL29_58709-",
+        "UL29_61292+"
+      ],
+      "8": [
+        "UL19_36407+",
+        "UL19_37448-",
+        "UL19_37908+",
+        "UL19_38322+",
+        "UL19_39276+",
+        "UL29_58709-",
+        "UL29_61292+",
+        "UL29_61578+"
+      ]
+    },
+    "best_sets_one_per_gene": {
+      "1": [
+        "UL19_36407+"
+      ],
+      "2": [
+        "UL19_36407+",
+        "UL29_58709-"
+      ],
+      "3": [
+        "UL19_36407+",
+        "UL29_58709-",
+        "UL30_64524+"
+      ],
+      "4": [
+        "UL19_36407+",
+        "UL29_58709-",
+        "UL30_64524+",
+        "UL5_12570+"
+      ],
+      "5": [
+        "UL19_36407+",
+        "UL29_58709-",
+        "UL30_64524+",
+        "UL5_12570+",
+        "UL52_109245+"
+      ],
+      "6": [
+        "UL19_36407+",
+        "UL29_58709-",
+        "UL30_64524+",
+        "UL5_12570+",
+        "UL52_109245+",
+        "UL54_114833-"
+      ],
+      "7": [
+        "RL2_5080+",
+        "UL19_36407+",
+        "UL29_58709-",
+        "UL30_64524+",
+        "UL5_12570+",
+        "UL52_109245+",
+        "UL54_114833-"
+      ]
+    },
+    "k_curve_one_per_gene": [
+      {
+        "k": 1,
+        "p_escape_best": 0.00475423268917531,
+        "p_escape_if_independent": 0.00475423268917531,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+",
+        "genes": "UL19",
+        "below_0.001": false,
+        "below_1e-06": false
+      },
+      {
+        "k": 2,
+        "p_escape_best": 2.2602728462823098e-05,
+        "p_escape_if_independent": 2.26027284628231e-05,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL29_58709-",
+        "genes": "UL19;UL29",
+        "below_0.001": true,
+        "below_1e-06": false
+      },
+      {
+        "k": 3,
+        "p_escape_best": 1.074586305225068e-07,
+        "p_escape_if_independent": 1.074586305225068e-07,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL29_58709-;UL30_64524+",
+        "genes": "UL19;UL29;UL30",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 4,
+        "p_escape_best": 5.108833339641189e-10,
+        "p_escape_if_independent": 5.10883333964119e-10,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+",
+        "genes": "UL19;UL29;UL30;UL5",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 5,
+        "p_escape_best": 2.428858246687081e-12,
+        "p_escape_if_independent": 2.4288582466870815e-12,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+;UL52_109245+",
+        "genes": "UL19;UL29;UL30;UL5;UL52",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 6,
+        "p_escape_best": 1.1547357273772752e-14,
+        "p_escape_if_independent": 1.1547357273772755e-14,
+        "joint_conservation": 1.0,
+        "guides": "UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+;UL52_109245+;UL54_114833-",
+        "genes": "UL19;UL29;UL30;UL5;UL52;UL54",
+        "below_0.001": true,
+        "below_1e-06": true
+      },
+      {
+        "k": 7,
+        "p_escape_best": 1.0953664506819398e-16,
+        "p_escape_if_independent": 1.09536645068194e-16,
+        "joint_conservation": 1.0,
+        "guides": "RL2_5080+;UL19_36407+;UL29_58709-;UL30_64524+;UL5_12570+;UL52_109245+;UL54_114833-",
+        "genes": "RL2;UL19;UL29;UL30;UL5;UL52;UL54",
+        "below_0.001": true,
+        "below_1e-06": true
+      }
+    ],
+    "minimum_k_one_per_gene": {
+      "0.001": 2,
+      "1e-06": 3
+    },
+    "tolerance": {
+      "RL2": {
+        "codons": 776,
+        "variable_codons": 84,
+        "isolates_used": 175,
+        "isolates_dropped": 8,
+        "length_polymorphic": 156
+      },
+      "UL19": {
+        "codons": 1375,
+        "variable_codons": 89,
+        "isolates_used": 182,
+        "isolates_dropped": 1,
+        "length_polymorphic": 4
+      },
+      "UL29": {
+        "codons": 1197,
+        "variable_codons": 68,
+        "isolates_used": 181,
+        "isolates_dropped": 2,
+        "length_polymorphic": 1
+      },
+      "UL30": {
+        "codons": 1236,
+        "variable_codons": 127,
+        "isolates_used": 183,
+        "isolates_dropped": 0,
+        "length_polymorphic": 6
+      },
+      "UL5": {
+        "codons": 883,
+        "variable_codons": 53,
+        "isolates_used": 182,
+        "isolates_dropped": 1,
+        "length_polymorphic": 4
+      },
+      "UL52": {
+        "codons": 1059,
+        "variable_codons": 75,
+        "isolates_used": 183,
+        "isolates_dropped": 0,
+        "length_polymorphic": 6
+      },
+      "UL54": {
+        "codons": 513,
+        "variable_codons": 47,
+        "isolates_used": 179,
+        "isolates_dropped": 4,
+        "length_polymorphic": 1
+      }
+    },
+    "sensitivity": {
+      "orders_of_magnitude_spanned": 3.1455845615422486,
+      "min_spearman_rho": 0.44060092917642074,
+      "n_settings": 37,
+      "n_settings_all_best_sets_match_baseline": 27,
+      "neuronal_nhej_scenario": {
+        "provenance": "MEASURED in Ramadoss et al. 2025 (Nat Commun 16:9883) Fig. 1d deposited source data -- pooled CRISPResso2 net-length histogram over 6 replicates, 118,722 reads, SpCas9 RNP + sgRNA B2Mg1 at human B2M in iPSC-derived neurons, 4 d post-transduction; ASSUMPTION when transferred to SaCas9 in trigeminal-ganglion neurons",
+        "source_file": "ramadoss2025_fig1d_indel_histogram.tsv",
+        "inframe_fraction": 0.09034091944388768,
+        "baseline_inframe_fraction": 0.19857139042438315,
+        "p_escape_amrani_pair": 0.00036418944206119885,
+        "p_escape_amrani_pair_baseline": 0.0009719879026815389,
+        "fold_lower_amrani_pair": 2.6689074158229027,
+        "spearman_q_vs_baseline": 0.9999955853609123,
+        "top20_site_overlap_vs_baseline": 1.0,
+        "best_sets_all_match_baseline": true
+      }
+    },
+    "outputs": {
+      "site_parameters": "results/escape_site_parameters.tsv",
+      "k_curve": "results/escape_k_curve.tsv",
+      "k_curve_one_per_gene": "results/escape_k_curve_one_per_gene.tsv",
+      "guide_sets": "results/escape_guide_sets.tsv",
+      "codon_tolerance": "results/escape_codon_tolerance.tsv",
+      "sensitivity": "results/escape_sensitivity.tsv",
+      "sensitivity_sets": "results/escape_sensitivity_sets.tsv",
+      "tolerance_qc": "results/escape_tolerance_qc.tsv",
+      "report": "results/escape_model_report.md"
+    }
+  },
+  "escape_skipped_because": null,
+  "offtarget": null
+}

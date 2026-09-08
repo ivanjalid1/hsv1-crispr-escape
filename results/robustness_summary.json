@@ -1,0 +1,489 @@
+{
+  "generated_utc": "2026-09-07T23:34:47Z",
+  "reference": "NC_001806.2",
+  "n_guides": 4777,
+  "n_genomes": 183,
+  "redundancy": {
+    "primary_identity_threshold": 0.999,
+    "effective_sample_size": 132,
+    "n_multi_member_clusters": 24,
+    "perfect_all_genomes": 833,
+    "perfect_deduplicated": 857,
+    "sweep": [
+      {
+        "ani_threshold": 0.9999,
+        "n_clusters": 153,
+        "n_genomes_collapsed": 30,
+        "largest_cluster": 5,
+        "n_perfectly_conserved": 833,
+        "pct_perfectly_conserved": 17.438
+      },
+      {
+        "ani_threshold": 0.999,
+        "n_clusters": 132,
+        "n_genomes_collapsed": 51,
+        "largest_cluster": 9,
+        "n_perfectly_conserved": 857,
+        "pct_perfectly_conserved": 17.94
+      },
+      {
+        "ani_threshold": 0.998,
+        "n_clusters": 107,
+        "n_genomes_collapsed": 76,
+        "largest_cluster": 18,
+        "n_perfectly_conserved": 906,
+        "pct_perfectly_conserved": 18.966
+      },
+      {
+        "ani_threshold": 0.995,
+        "n_clusters": 20,
+        "n_genomes_collapsed": 163,
+        "largest_cluster": 151,
+        "n_perfectly_conserved": 1948,
+        "pct_perfectly_conserved": 40.779
+      },
+      {
+        "ani_threshold": 0.99,
+        "n_clusters": 5,
+        "n_genomes_collapsed": 178,
+        "largest_cluster": 179,
+        "n_perfectly_conserved": 2922,
+        "pct_perfectly_conserved": 61.168
+      },
+      {
+        "ani_threshold": 0.98,
+        "n_clusters": 1,
+        "n_genomes_collapsed": 182,
+        "largest_cluster": 183,
+        "n_perfectly_conserved": 4356,
+        "pct_perfectly_conserved": 91.187
+      }
+    ],
+    "identity": {
+      "min_pairwise_identity": 0.981343,
+      "median_pairwise_identity": 0.99369,
+      "max_pairwise_identity": 1.0
+    }
+  },
+  "ambiguity": {
+    "perfect_strict": 833,
+    "perfect_n_tolerant": 931,
+    "n_rescued_by_n_tolerance": 98,
+    "status_totals": {
+      "present": 787938,
+      "absent": 84007,
+      "unknown_ambiguous": 174,
+      "unknown_structural": 2072,
+      "not_covered": 0
+    },
+    "sweep": [
+      {
+        "max_ambiguous_fraction": "none",
+        "n_genomes": 183,
+        "n_genomes_dropped": 0,
+        "n_perfectly_conserved": 833,
+        "pct_perfectly_conserved": 17.438
+      },
+      {
+        "max_ambiguous_fraction": 0.05,
+        "n_genomes": 183,
+        "n_genomes_dropped": 0,
+        "n_perfectly_conserved": 833,
+        "pct_perfectly_conserved": 17.438
+      },
+      {
+        "max_ambiguous_fraction": 0.02,
+        "n_genomes": 175,
+        "n_genomes_dropped": 8,
+        "n_perfectly_conserved": 860,
+        "pct_perfectly_conserved": 18.003
+      },
+      {
+        "max_ambiguous_fraction": 0.01,
+        "n_genomes": 169,
+        "n_genomes_dropped": 14,
+        "n_perfectly_conserved": 892,
+        "pct_perfectly_conserved": 18.673
+      },
+      {
+        "max_ambiguous_fraction": 0.005,
+        "n_genomes": 166,
+        "n_genomes_dropped": 17,
+        "n_perfectly_conserved": 903,
+        "pct_perfectly_conserved": 18.903
+      },
+      {
+        "max_ambiguous_fraction": 0.002,
+        "n_genomes": 163,
+        "n_genomes_dropped": 20,
+        "n_perfectly_conserved": 921,
+        "pct_perfectly_conserved": 19.28
+      },
+      {
+        "max_ambiguous_fraction": 0.001,
+        "n_genomes": 157,
+        "n_genomes_dropped": 26,
+        "n_perfectly_conserved": 945,
+        "pct_perfectly_conserved": 19.782
+      },
+      {
+        "max_ambiguous_fraction": 0.0005,
+        "n_genomes": 153,
+        "n_genomes_dropped": 30,
+        "n_perfectly_conserved": 950,
+        "pct_perfectly_conserved": 19.887
+      },
+      {
+        "max_ambiguous_fraction": 0.0002,
+        "n_genomes": 144,
+        "n_genomes_dropped": 39,
+        "n_perfectly_conserved": 965,
+        "pct_perfectly_conserved": 20.201
+      },
+      {
+        "max_ambiguous_fraction": 0.0001,
+        "n_genomes": 141,
+        "n_genomes_dropped": 42,
+        "n_perfectly_conserved": 970,
+        "pct_perfectly_conserved": 20.306
+      },
+      {
+        "max_ambiguous_fraction": 0.0,
+        "n_genomes": 83,
+        "n_genomes_dropped": 100,
+        "n_perfectly_conserved": 1294,
+        "pct_perfectly_conserved": 27.088
+      }
+    ]
+  },
+  "gene_level": {
+    "corpus": {
+      "queries": [
+        {
+          "record_class": "subgenomic",
+          "entrez_query": "txid10298[Organism:exp] AND biomol_genomic[PROP] NOT patent[PROP] AND 100:145000[SLEN]",
+          "esearch_reported_total": 4552,
+          "accessions_used": 4552
+        },
+        {
+          "record_class": "partial_genome",
+          "entrez_query": "txid10298[Organism:exp] AND biomol_genomic[PROP] NOT patent[PROP] AND 145000:160000[SLEN] NOT \"complete genome\"[Title]",
+          "esearch_reported_total": 393,
+          "accessions_used": 393
+        }
+      ],
+      "n_requested": 4945,
+      "n_cached_hit": 4945,
+      "n_downloaded": 0,
+      "n_available": 4945
+    },
+    "n_records_mapped": 4313,
+    "corpus_composition": [
+      {
+        "record_class": "subgenomic",
+        "records_downloaded": 4552,
+        "records_mapping_to_reference": 3920,
+        "records_covering_a_target_gene": 1021,
+        "median_bp": 1131
+      },
+      {
+        "record_class": "partial_genome",
+        "records_downloaded": 393,
+        "records_mapping_to_reference": 393,
+        "records_covering_a_target_gene": 393,
+        "median_bp": 151666
+      }
+    ],
+    "comparison": {
+      "tier": "conservation_gene_level",
+      "n_guides": 4777,
+      "n_guides_with_enough_records": 4777,
+      "min_records_required": 10,
+      "pearson_r": 0.9919,
+      "spearman_rho": 0.8345,
+      "n_perfect_at_183": 833,
+      "n_perfect_at_183_below_0.99_gene_level": 119,
+      "n_perfect_at_183_below_0.95_gene_level": 0,
+      "n_perfect_at_183_below_0.90_gene_level": 0,
+      "n_perfect_at_183_below_0.70_gene_level": 0,
+      "n_perfect_at_183_still_perfect": 183,
+      "median_gene_level_of_perfect": 0.9958,
+      "min_gene_level_of_perfect": 0.96,
+      "mean_gene_level_all": 0.9002,
+      "mean_genome_level_all": 0.9013,
+      "n_gene_level_ge_0.70": 4281,
+      "n_gene_level_ge_0.95": 3470,
+      "n_gene_level_eq_1.00": 373,
+      "median_records_per_guide": 436,
+      "max_records_per_guide": 930,
+      "tiers": {
+        "whole_corpus": {
+          "tier": "conservation_gene_level",
+          "n_guides": 4777,
+          "n_guides_with_enough_records": 4777,
+          "min_records_required": 10,
+          "pearson_r": 0.9919,
+          "spearman_rho": 0.8345,
+          "n_perfect_at_183": 833,
+          "n_perfect_at_183_below_0.99_gene_level": 119,
+          "n_perfect_at_183_below_0.95_gene_level": 0,
+          "n_perfect_at_183_below_0.90_gene_level": 0,
+          "n_perfect_at_183_below_0.70_gene_level": 0,
+          "n_perfect_at_183_still_perfect": 183,
+          "median_gene_level_of_perfect": 0.9958,
+          "min_gene_level_of_perfect": 0.96,
+          "mean_gene_level_all": 0.9002,
+          "mean_genome_level_all": 0.9013,
+          "n_gene_level_ge_0.70": 4281,
+          "n_gene_level_ge_0.95": 3470,
+          "n_gene_level_eq_1.00": 373,
+          "median_records_per_guide": 436,
+          "max_records_per_guide": 930
+        },
+        "subgenomic_only": {
+          "tier": "conservation_subgenomic",
+          "n_guides": 4777,
+          "n_guides_with_enough_records": 4769,
+          "min_records_required": 10,
+          "pearson_r": 0.9285,
+          "spearman_rho": 0.6513,
+          "n_perfect_at_183": 833,
+          "n_perfect_at_183_below_0.99_gene_level": 168,
+          "n_perfect_at_183_below_0.95_gene_level": 15,
+          "n_perfect_at_183_below_0.90_gene_level": 7,
+          "n_perfect_at_183_below_0.70_gene_level": 0,
+          "n_perfect_at_183_still_perfect": 586,
+          "median_gene_level_of_perfect": 1.0,
+          "min_gene_level_of_perfect": 0.8889,
+          "mean_gene_level_all": 0.9097,
+          "mean_genome_level_all": 0.9025,
+          "n_gene_level_ge_0.70": 4345,
+          "n_gene_level_ge_0.95": 3505,
+          "n_gene_level_eq_1.00": 1906,
+          "median_records_per_guide": 43,
+          "max_records_per_guide": 538
+        },
+        "partial_genomes_only": {
+          "tier": "conservation_partial_genomes",
+          "n_guides": 4777,
+          "n_guides_with_enough_records": 4777,
+          "min_records_required": 10,
+          "pearson_r": 0.9919,
+          "spearman_rho": 0.8329,
+          "n_perfect_at_183": 833,
+          "n_perfect_at_183_below_0.99_gene_level": 145,
+          "n_perfect_at_183_below_0.95_gene_level": 0,
+          "n_perfect_at_183_below_0.90_gene_level": 0,
+          "n_perfect_at_183_below_0.70_gene_level": 0,
+          "n_perfect_at_183_still_perfect": 268,
+          "median_gene_level_of_perfect": 0.9974,
+          "min_gene_level_of_perfect": 0.9541,
+          "mean_gene_level_all": 0.9,
+          "mean_genome_level_all": 0.9013,
+          "n_gene_level_ge_0.70": 4274,
+          "n_gene_level_ge_0.95": 3413,
+          "n_gene_level_eq_1.00": 551,
+          "median_records_per_guide": 393,
+          "max_records_per_guide": 393
+        },
+        "no_coverage_correction": {
+          "tier": "conservation_no_coverage_check",
+          "n_guides": 4777,
+          "n_guides_with_enough_records": 4777,
+          "min_records_required": 10,
+          "pearson_r": 0.985,
+          "spearman_rho": 0.7506,
+          "n_perfect_at_183": 833,
+          "n_perfect_at_183_below_0.99_gene_level": 833,
+          "n_perfect_at_183_below_0.95_gene_level": 823,
+          "n_perfect_at_183_below_0.90_gene_level": 33,
+          "n_perfect_at_183_below_0.70_gene_level": 0,
+          "n_perfect_at_183_still_perfect": 0,
+          "median_gene_level_of_perfect": 0.9122,
+          "min_gene_level_of_perfect": 0.8739,
+          "mean_gene_level_all": 0.8248,
+          "mean_genome_level_all": 0.9013,
+          "n_gene_level_ge_0.70": 4171,
+          "n_gene_level_ge_0.95": 21,
+          "n_gene_level_eq_1.00": 0,
+          "median_records_per_guide": 436,
+          "max_records_per_guide": 930
+        }
+      }
+    },
+    "records_per_gene": [
+      {
+        "gene": "UL30",
+        "records_covering_gene": 967,
+        "subgenomic": 574,
+        "partial_genome": 393,
+        "median_record_bp": 3708
+      },
+      {
+        "gene": "UL19",
+        "records_covering_gene": 432,
+        "subgenomic": 39,
+        "partial_genome": 393,
+        "median_record_bp": 151532
+      },
+      {
+        "gene": "UL5",
+        "records_covering_gene": 706,
+        "subgenomic": 313,
+        "partial_genome": 393,
+        "median_record_bp": 150308
+      },
+      {
+        "gene": "UL52",
+        "records_covering_gene": 494,
+        "subgenomic": 101,
+        "partial_genome": 393,
+        "median_record_bp": 151313
+      },
+      {
+        "gene": "UL29",
+        "records_covering_gene": 455,
+        "subgenomic": 62,
+        "partial_genome": 393,
+        "median_record_bp": 151463
+      },
+      {
+        "gene": "RL2",
+        "records_covering_gene": 445,
+        "subgenomic": 52,
+        "partial_genome": 393,
+        "median_record_bp": 151485
+      },
+      {
+        "gene": "UL54",
+        "records_covering_gene": 444,
+        "subgenomic": 51,
+        "partial_genome": 393,
+        "median_record_bp": 151490
+      }
+    ],
+    "per_gene_subgenomic_tier": [
+      {
+        "gene": "RL2",
+        "guides": 713,
+        "median_subgenomic_records": 27,
+        "max_subgenomic_records": 38,
+        "perfect_at_183_with_usable_n": 91,
+        "of_those_below_0.95_subgenomic": 0,
+        "min_subgenomic_conservation_of_perfect": 0.9667
+      },
+      {
+        "gene": "UL19",
+        "guides": 959,
+        "median_subgenomic_records": 34,
+        "max_subgenomic_records": 36,
+        "perfect_at_183_with_usable_n": 247,
+        "of_those_below_0.95_subgenomic": 13,
+        "min_subgenomic_conservation_of_perfect": 0.8889
+      },
+      {
+        "gene": "UL29",
+        "guides": 783,
+        "median_subgenomic_records": 43,
+        "max_subgenomic_records": 56,
+        "perfect_at_183_with_usable_n": 124,
+        "of_those_below_0.95_subgenomic": 1,
+        "min_subgenomic_conservation_of_perfect": 0.9302
+      },
+      {
+        "gene": "UL30",
+        "guides": 794,
+        "median_subgenomic_records": 326,
+        "max_subgenomic_records": 538,
+        "perfect_at_183_with_usable_n": 104,
+        "of_those_below_0.95_subgenomic": 0,
+        "min_subgenomic_conservation_of_perfect": 0.9601
+      },
+      {
+        "gene": "UL5",
+        "guides": 483,
+        "median_subgenomic_records": 107,
+        "max_subgenomic_records": 311,
+        "perfect_at_183_with_usable_n": 94,
+        "of_those_below_0.95_subgenomic": 0,
+        "min_subgenomic_conservation_of_perfect": 0.9533
+      },
+      {
+        "gene": "UL52",
+        "guides": 673,
+        "median_subgenomic_records": 83,
+        "max_subgenomic_records": 101,
+        "perfect_at_183_with_usable_n": 121,
+        "of_those_below_0.95_subgenomic": 1,
+        "min_subgenomic_conservation_of_perfect": 0.9167
+      },
+      {
+        "gene": "UL54",
+        "guides": 372,
+        "median_subgenomic_records": 42,
+        "max_subgenomic_records": 44,
+        "perfect_at_183_with_usable_n": 52,
+        "of_those_below_0.95_subgenomic": 0,
+        "min_subgenomic_conservation_of_perfect": 0.9762
+      }
+    ]
+  },
+  "gene_level_skip_reason": null,
+  "benchmark_guides": [
+    {
+      "guide": "Amrani2024_ICP0g1",
+      "spacer": "GTACCCGACGGCCCCCGCGT",
+      "pam": "CGGAGT",
+      "present_in_complete_genomes_n183": 180,
+      "conservation_complete_genomes": 0.9836,
+      "gene_level_records_covering": 445,
+      "gene_level_present": 417,
+      "conservation_gene_level": 0.9371
+    },
+    {
+      "guide": "Amrani2024_ICP0g2",
+      "spacer": "CTCAGGCCGCGAACCAAGAA",
+      "pam": "CAGAGT",
+      "present_in_complete_genomes_n183": 155,
+      "conservation_complete_genomes": 0.847,
+      "gene_level_records_covering": 445,
+      "gene_level_present": 359,
+      "conservation_gene_level": 0.8067
+    },
+    {
+      "guide": "Amrani2024_ICP27g1",
+      "spacer": "AATCCTAGACACGCACCGCC",
+      "pam": "AGGAGT",
+      "present_in_complete_genomes_n183": 179,
+      "conservation_complete_genomes": 0.9781,
+      "gene_level_records_covering": 444,
+      "gene_level_present": 432,
+      "conservation_gene_level": 0.973
+    },
+    {
+      "guide": "Amrani2024_ICP27g2",
+      "spacer": "TCGCCAGCGTCATTAGCGGG",
+      "pam": "GGGGGT",
+      "present_in_complete_genomes_n183": 178,
+      "conservation_complete_genomes": 0.9727,
+      "gene_level_records_covering": 444,
+      "gene_level_present": 416,
+      "conservation_gene_level": 0.9369
+    }
+  ],
+  "parameters": {
+    "minhash_k": 21,
+    "minhash_sketch": 5000,
+    "dedup_identity": 0.999,
+    "anchor_k": 25,
+    "anchor_step": 4,
+    "anchor_max_gap": 3000,
+    "anchor_max_drift": 60,
+    "anchor_max_occurrences": 4,
+    "max_bracket_span": 2000,
+    "min_records_per_guide": 10,
+    "gene_corpus_min_length": 100,
+    "gene_corpus_max_length": 145000,
+    "partial_genomes_included": true
+  }
+}
