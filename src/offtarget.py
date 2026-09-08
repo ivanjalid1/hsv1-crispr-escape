@@ -1,4 +1,4 @@
-"""Stage 7 -- human (GRCh38) off-target screening for SaCas9 guides.
+"""Stage 8 -- human (GRCh38) off-target screening for SaCas9 guides.
 
 Why this module exists
 ----------------------
@@ -108,6 +108,7 @@ __all__ = [
     "build_genome_cache",
     "bruteforce_scan_sequence",
     "caveat",
+    "unscreened_caveat",
     "encode_sequence",
     "load_guides",
     "main",
@@ -1008,6 +1009,22 @@ def caveat() -> str:
     )
 
 
+def unscreened_caveat() -> str:
+    """The sentence that must accompany a run in which stage 8 did NOT execute.
+
+    `caveat()` describes a screen that happened; stating it after a run that skipped
+    stage 8 would be a false claim about the guides in that run's own tables, so the
+    two are separate functions and the caller picks by what actually ran.
+    """
+    return (
+        "Off-target screening was NOT performed in this run. The guides in this "
+        "run's tables have not been checked against the human genome here. Stage 8 "
+        "(`python run_pipeline.py --offtarget`, or `python src/offtarget.py`) "
+        "implements that screen for the stage-6 SaCas9 benchmark guide set; its "
+        "results are in results/offtarget_report.md and cover that guide set only."
+    )
+
+
 # --------------------------------------------------------------------------------------
 # Genomic context (Ensembl GTF)
 # --------------------------------------------------------------------------------------
@@ -1426,7 +1443,7 @@ def write_report(payload: dict, summary: pd.DataFrame, hits: pd.DataFrame,
     A = L.append
     A("# Human (GRCh38) off-target screening of the SaCas9 guide set")
     A("")
-    A(f"Stage 7, `src/offtarget.py`. Generated {payload['generated_utc']}. "
+    A(f"Stage 8, `src/offtarget.py`. Generated {payload['generated_utc']}. "
       "Every number below is measured on this machine, not estimated or quoted.")
     A("")
 
@@ -1880,7 +1897,7 @@ def write_report(payload: dict, summary: pd.DataFrame, hits: pd.DataFrame,
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
-    g = parser.add_argument_group("human off-target screening (stage 7)")
+    g = parser.add_argument_group("human off-target screening (stage 8)")
     g.add_argument("--stage", choices=("all", "fetch", "scan", "report"), default="all",
                    help="'fetch' downloads, verifies and encodes GRCh38 then stops; "
                         "'report' re-renders results/offtarget_report.md from the "
@@ -1947,7 +1964,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def screen_offtargets(argv: list[str] | None = None) -> int:
-    """Backwards-compatible name kept from the phase-1 stub. Now implemented."""
+    """Backwards-compatible name kept from the phase-1 stub, which this replaced."""
     return main(argv)
 
 

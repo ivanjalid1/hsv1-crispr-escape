@@ -4,8 +4,17 @@
 data/raw/
 
 # All computed tables (guides_candidates.tsv, conservation.tsv, guides_ranked.tsv,
-# summary.json, run_log.json).
-results/
+# summary.json, run_log.json). `results/*` rather than `results/` so that the
+# single exception below can be re-included: git does not descend into an
+# ignored DIRECTORY, so a negation inside one would never be consulted.
+results/*
+
+# ... with one deliberate exception. results/recommendation.md is not a regenerable
+# table: it is the written reconciliation of stages 6, 7 and 8, which proposed three
+# different guides on three different axes. Every number in it is reproducible from
+# the TSVs above, but the selection rule and the withdrawals are an argument, and an
+# argument that lives only in an ignored directory is an argument nobody can review.
+!results/recommendation.md
 
 # The manifest and fetch summary are run artifacts too. They are the
 # reproducibility record for a *specific* run, so they are archived alongside a

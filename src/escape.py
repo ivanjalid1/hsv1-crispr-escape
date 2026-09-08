@@ -2438,9 +2438,13 @@ model is about the first, and is silent about the second.
         "happens if it is not, and the honest answer is that this is a question for an "
         "experiment, not for a model.",
         "6. **It cannot see off-target activity, delivery, packaging or expression.** "
-        "No guide here has been screened against the human genome; `src/offtarget.py` "
-        "is a documented stub. A set this model calls optimal may be undeliverable, "
-        "unsynthesisable or unsafe.",
+        "Nothing in THIS module looks at the human genome. Stage 8 "
+        "(`src/offtarget.py`) does, but only for the stage-6 SaCas9 benchmark guide "
+        "set in RL2 and UL54 -- not for the UL19/UL29/UL30/UL5/UL52 sites this model "
+        "puts at the top of its k-curve, none of which has been screened. A set this "
+        "model calls optimal may still be undeliverable, unsynthesisable or unsafe, "
+        "and results/recommendation.md is where the three axes are reconciled for the "
+        "guides that HAVE been screened on all of them.",
         f"7. **The denominator is {n_g} complete genomes, not the circulating "
         f"population.** Stage 5 puts the effective sample size nearer 132 at 99.9% "
         f"identity, the set mixes clinical isolates with laboratory strains, and rare "

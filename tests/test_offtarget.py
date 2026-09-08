@@ -1,4 +1,4 @@
-"""Offline unit tests for stage 7 (human off-target screening).
+"""Offline unit tests for stage 8 (human off-target screening).
 
 Run with:  python tests/test_offtarget.py      (or: pytest tests/)
 

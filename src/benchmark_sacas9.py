@@ -626,6 +626,24 @@ def build_context(pool: pd.DataFrame, pairs: pd.DataFrame, accessions: list[str]
         f"({int(swap['n_genomes_both_present'])}/{n_g} genomes) -- one guide changed, "
         f"{int(swap['n_genomes_both_present']) - int(lead['n_genomes_both_present'])} "
         f"more isolates covered.\n\n"
+        f"> **WITHDRAWN -- `{swap['icp0_guide']}` is no longer the recommended ICP0 "
+        f"guide.** This paragraph is left standing because the claim was made here "
+        f"and deleting it would erase the record. Stage 8 "
+        f"(`results/offtarget_report.md`) subsequently screened these candidates "
+        f"against GRCh38 and found `{swap['icp0_guide']}` materially dirtier than "
+        f"ICP0g2 itself: 19 NNGRRT sites at <= 4 mismatches against ICP0g2's 5, and "
+        f"6 at <= 3 mismatches against ICP0g2's 0, one of them inside *ABL1*. The "
+        f"conservation arithmetic above is unaffected -- {swap['icp0_guide']} really "
+        f"is perfectly conserved on both denominators and the pair really does go "
+        f"from {lead['joint_conservation']:.3f} to "
+        f"{swap['joint_conservation']:.3f} -- but conservation was never the whole "
+        f"selection problem, and this section ranks on conservation alone. Note also "
+        f"that the ICP0 guide named in this paragraph is picked by a tie-break: "
+        f"several ICP0 sites are perfectly conserved on both denominators and give "
+        f"the identical joint conservation with ICP27g1, so which one is named here "
+        f"carries no information beyond the tie-break order. **The reconciled single "
+        f"recommendation, chosen jointly on conservation, escape probability and "
+        f"human off-target burden, is in `results/recommendation.md`.**\n\n"
         f"The joint measure is not decoration: it is bounded above by the smaller "
         f"marginal and below by (a + b - 1), and for this pair it sits exactly at the "
         f"lower bound. A per-guide conservation table -- the form in which the "
@@ -727,12 +745,20 @@ This analysis measures one thing -- exact target-site presence across sequenced
 HSV-1 isolates -- and ranks on it. Everything below is a reason the ranking is not,
 by itself, a guide-selection decision.
 
-1. **No off-target screening.** `src/offtarget.py` is a stub. None of the
-   {n_better_filtered} alternatives has been checked against the human genome. Amrani
-   et al. did run BWA + Cas-OFFinder against hg38 and GUIDE-seq validation, and they
-   selected partly on nominated off-target counts (ICP0g1 358, ICP0g2 910, ICP27g1
-   443, ICP27g2 316). A site that is better conserved may well be worse on that axis;
-   we cannot see it. **This is the single largest gap in the comparison.**
+1. **This section ranks on conservation alone, and off-target burden -- measured
+   in stage 8 -- changes the answer.** When this stage was written
+   `src/offtarget.py` was a stub and none of the {n_better_filtered} alternatives had
+   been checked against the human genome. That gap is closed: stage 8
+   (`src/offtarget.py`, `results/offtarget_report.md`) screens this pool against the
+   Ensembl 116 GRCh38 primary assembly at up to 4 mismatches under NNGRRT and NNGRRN,
+   with coding-exon annotation. It did not confirm the ranking below -- it overturned
+   the particular guide this stage put forward, and the reconciled recommendation is
+   in `results/recommendation.md`. Amrani et al. ran BWA + Cas-OFFinder against hg38
+   with GUIDE-seq validation and selected partly on nominated off-target counts
+   (ICP0g1 358, ICP0g2 910, ICP27g1 443, ICP27g2 316); bulge-containing off-targets
+   and any cell-based validation remain outside this repository. **A conservation
+   rank from this section is an argument about their selection metric, not a
+   guide-selection decision.**
 
 2. **No activity prediction.** Conservation says a site exists in an isolate, not that
    SaCas9 cuts it efficiently. They screened six pairwise combinations in Vero cells

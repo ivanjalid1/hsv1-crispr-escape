@@ -13,6 +13,13 @@ SpCas9-only candidate set is not comparable to theirs site-for-site. Stage 6 doe
 that comparison directly; see
 [SaCas9 head-to-head](#sacas9-head-to-head-with-amrani-et-al-2024).
 
+Three further opt-in stages take the comparison past conservation: stage 5
+(denominator robustness), stage 7 (a quantitative multiplex escape-probability
+model) and stage 8 (human GRCh38 off-target screening). Those three stages
+disagreed with each other about which guide to recommend; the disagreement is
+resolved, on all three axes jointly, in
+[`results/recommendation.md`](#the-reconciled-recommendation).
+
 It is deliberately dependency-light: pure Python plus Biopython, pandas and numpy.
 No conda, no WSL, no MAFFT/MUSCLE/Clustal, no compiled tooling beyond what pip
 wheels provide.
@@ -202,11 +209,28 @@ python run_pipeline.py --robustness
 # ... parts A and B only, no further network access
 python run_pipeline.py --robustness --skip-gene-corpus
 
+# stage 7: the multiplex escape-probability model (offline, ~3 min)
+python run_pipeline.py --skip-fetch --escape
+python src/escape.py
+
+# stage 8: human GRCh38 off-target screening. SKIPPED with an explanatory message
+# unless the genome cache already exists -- ~1.0 GB is downloaded and ~4.1 GB
+# occupied on disk, and that never happens implicitly.
+python src/offtarget.py --stage fetch          # once, explicit, ~4.1 GB on disk
+python run_pipeline.py --skip-fetch --offtarget
+python src/offtarget.py                        # or run the stage on its own
+
+# reconcile stages 6-8 into the joint table behind results/recommendation.md
+python src/reconcile.py
+
 # offline unit tests (no network)
 python tests/test_core.py
 python tests/test_robustness.py
 python tests/test_nuclease.py
 python tests/test_benchmark.py
+python tests/test_escape.py
+python tests/test_offtarget.py
+python tests/test_reconcile.py
 ```
 
 Each stage is also runnable on its own: `python src/fetch_genomes.py --help`, etc.
@@ -227,13 +251,33 @@ contacting NCBI, `--refresh` bypasses the download cache, `-v` enables debug log
 | 4 | `src/report.py` | `results/guides_ranked.tsv`, `results/summary.json` |
 | 5 | `src/robustness.py` | `results/robustness_report.md` + supporting TSVs (opt-in, `--robustness`) |
 | 6 | `src/benchmark_sacas9.py` | `results/sacas9_benchmark_report.md` + supporting TSVs (opt-in, `--benchmark-sacas9`) |
+| 7 | `src/escape.py` | `results/escape_model_report.md` + supporting TSVs (opt-in, `--escape`) |
+| 8 | `src/offtarget.py` | `results/offtarget_report.md` + supporting TSVs (opt-in, `--offtarget`) |
 | — | `run_pipeline.py` | `results/run_log.json` |
+| — | `src/reconcile.py` | `results/recommendation_table.tsv` — the joint stage-6/7/8 table behind `results/recommendation.md` |
 
 Outputs are **namespaced by nuclease**. SpCas9 keeps the historical paths
 (`results/guides_ranked.tsv`); any other nuclease writes to `results/<tag>/`
 (`results/sacas9/`, `results/sacas9-nngrrn/`, `results/sacas9-20nt/`), so runs under
-different nucleases never overwrite each other. Stage 6 is nuclease-fixed by
-construction and always writes to `results/`.
+different nucleases never overwrite each other. Stages 6, 7 and 8 are nuclease-fixed
+by construction -- they exist to compare against Amrani et al.'s SaCas9 guides in
+that paper's own grammar -- and always write to `results/`.
+
+**A note on stage numbering.** Stages 7 and 8 were developed concurrently and both
+were called "stage 7" in their first drafts. This repository fixes **escape = stage
+7, off-target = stage 8**, following the order in which they were committed. Every
+module docstring, report header, CLI argument group and test file now uses that
+numbering; if you find a "stage 7" attached to off-target screening anywhere, it is
+stale.
+
+**Stages 7 and 8 are opt-in and are skipped when their inputs are absent.** Stage 7
+needs the stage-1 manifest and the cached reference GenBank record; stage 8 needs the
+stage-6 candidate pool and the GRCh38 cache. If a prerequisite is missing the stage
+logs *why* it is skipping and the pipeline continues. The GRCh38 cache in particular
+is **never built implicitly**: it is a ~1.0 GB download occupying ~4.1 GB on disk, so
+it must be requested with `python src/offtarget.py --stage fetch` or
+`--offtarget-download`. Stages 1-4 are unaffected by either flag and reproduce
+byte-identically with or without them.
 
 **1. Fetch.** Queries NCBI Nucleotide, sorts accessions before applying `--limit` (so
 `--limit 5` is deterministic), downloads FASTA per accession with caching, batching,
@@ -307,6 +351,25 @@ flattering answer. A non-matching pair is then ABSENT (bracket short and fully
 resolved — real variation), or UNKNOWN (bracket contains an `N`, or is implausibly
 wide, or the record does not reach both sides). Only PRESENT and ABSENT enter the
 corrected denominator.
+
+**6. SaCas9 head-to-head (opt-in, `--benchmark-sacas9`).** Re-enumerates the ICP0/RL2
+and ICP27/UL54 site space in Amrani et al.'s own grammar (20 nt spacer + `NNGRRT`),
+recovers all four of their published guides from it — asserted in
+`tests/test_benchmark.py`, because if they were not recovered every rank would be
+meaningless — and ranks them against the alternatives on both conservation
+denominators, including the *joint* conservation of every ICP0 × ICP27 pair.
+[Details](#sacas9-head-to-head-with-amrani-et-al-2024).
+
+**7. Escape model (opt-in, `--escape`).** Computes P(escape) for arbitrary guide sets
+over the empirical 183-genome presence matrix, with a per-site NHEJ repair term scored
+against a per-codon tolerance profile *measured* from cross-strain amino-acid
+variation. Deterministic closed form plus a seeded Monte Carlo cross-check.
+[Details](#escape-probability-stage-7).
+
+**8. Human off-target screening (opt-in, `--offtarget`).** Exhaustive substitution
+search of the guide set against GRCh38, both strands, ≤ 4 mismatches, `NNGRRN` with
+`NNGRRT` flagged as its subset, coding-exon annotation from the Ensembl GTF. Runs only
+if the genome cache is already present. [Details](#human-off-target-screening-stage-8).
 
 ---
 
@@ -563,6 +626,15 @@ meaningless.
   This joint number is invisible to a per-guide conservation table, which is the
   form in which their method reports its selection.
 
+  > **`RL2_3441+` is WITHDRAWN as the named recommendation.** The sentence above is
+  > kept because the claim was made here, and its conservation arithmetic is still
+  > correct. Stage 8 screened it against GRCh38 and found it *dirtier than ICP0g2*:
+  > 19 NNGRRT sites at ≤ 4 mismatches against ICP0g2's 5, and 6 at ≤ 3 mismatches
+  > against ICP0g2's 0, one of them inside *ABL1*. Several ICP0 sites tie exactly on
+  > the conservation figure quoted, so naming this one was always a tie-break, not a
+  > finding. See [the reconciled recommendation](#the-reconciled-recommendation) and
+  > `results/recommendation.md`.
+
 ### The feasibility check, which does not go the way you would expect
 
 ICP0 is GC-rich and repeat-associated, so the obvious objection is that the
@@ -575,16 +647,155 @@ themselves flagged as a problem, the alternatives are *better*, not worse.
 
 ### What this does not show
 
-No off-target screening was performed here (`src/offtarget.py` is a stub), and they
-did run BWA + Cas-OFFinder against hg38 with GUIDE-seq validation and selected partly
-on nominated off-target counts. No activity prediction is performed either, and they
-screened six pairwise combinations in Vero cells before choosing. AAV packaging,
-synthesis feasibility and unpublished screening failures are all invisible here. The
-defensible claim is therefore narrow and specific: **on cross-isolate conservation --
-the axis they themselves selected on -- their lead ICP0 guide is beaten by a quarter
-of its own gene's SaCas9 sites, and their lead pair by 258 filter-passing pairs.**
-Whether any of those alternatives is a better *drug* is not settled by this analysis,
-and the report says so at length.
+Stage 6 ranks on cross-isolate conservation and on nothing else. Two of the axes it
+cannot see have since been measured, and one of them changed the answer:
+
+* **Off-target burden is now measured** — stage 8 (`src/offtarget.py`), against the
+  Ensembl 116 GRCh38 primary assembly, ≤ 4 mismatches, both PAM variants, both
+  strands, with coding-exon annotation. It **overturned this stage's named guide**
+  (`RL2_3441+`) and vindicated their ICP27 choice. It does not model DNA/RNA bulges,
+  which Cas-OFFinder does, and it includes no cell-based validation, whereas Amrani
+  et al. ran GUIDE-seq.
+* **Escape probability is now modelled** — stage 7 (`src/escape.py`). It turns out to
+  carry almost no information about *which* ICP0 guide to choose, for a reason worth
+  knowing; see [the reconciled recommendation](#the-reconciled-recommendation).
+* **Activity is still not predicted.** Conservation says a site exists in an isolate,
+  not that SaCas9 cuts it efficiently. Amrani et al. screened six pairwise
+  combinations in Vero cells and chose on measured antiviral activity. AAV packaging,
+  synthesis feasibility and unpublished screening failures remain invisible here.
+
+The defensible claim from this stage alone is therefore narrow and specific: **on
+cross-isolate conservation -- the axis they themselves selected on -- their lead ICP0
+guide is beaten by a quarter of its own gene's SaCas9 sites, and their lead pair by
+258 filter-passing pairs.** Whether any of those alternatives is a better *drug* is
+not settled by this analysis, and the report says so at length. What *is* now settled
+is that conservation alone picks the wrong one of them.
+
+---
+
+## Escape probability (stage 7)
+
+Full write-up in `results/escape_model_report.md`; `src/escape.py`, opt-in with
+`--escape`. Amrani et al. justify a two-guide design by citing HIV CRISPR-escape
+literature and asserting that targeting "two or more" sites prevents escape. They
+never quantify it. This stage does.
+
+A viral genome escapes multiplex editing if it ends up uncleavable at *every*
+targeted site while still encoding functional essential proteins. Per site that
+decomposes into a **measured** term — the per-genome presence matrix across the 183
+complete genomes, so correlated failure across sites is reproduced rather than
+assumed away — and a **repair** term `q_i`, the probability that NHEJ produces an
+indel that destroys recognition and leaves the protein working. Frameshifts in an
+essential gene are not escape. In-frame indels are scored against a per-codon
+tolerance profile *measured from cross-strain amino-acid variation in the same 183
+genomes*: a codon that varies among viable clinical isolates is demonstrably
+tolerant. The NHEJ indel-length spectrum could not be verified offline and is shipped
+as an explicitly labelled ASSUMPTION with an override and a sensitivity sweep; no
+citation is invented for it.
+
+| set | k | joint conservation | P(escape) per exposed genome |
+|---|---|---|---|
+| Amrani lead pair (ICP0g2 + ICP27g1), as published | 2 | 0.825 | 9.720e-04 |
+| best k=2 from the same SaCas9 site space | 2 | 1.000 | 2.260e-05 |
+| best k=3 | 3 | 1.000 | 1.075e-07 |
+
+**The dominant term at k=2 is guide *choice*, not guide *count*.** 96% of the
+published pair's escape probability comes from the 32 isolates that have already lost
+ICP0g2; the same two-guide architecture with a better-conserved ICP0 guide clears the
+same thresholds. Two findings cut against the tidy version of that story:
+
+* **The sampling resolution of the corpus, not the NHEJ model, sets the floor.** A
+  site absent in 0 of 183 isolates is still consistent with a population absence
+  frequency up to 0.0162 (Clopper–Pearson 95%, the rule of three). At that bound a
+  single site cannot be certified below ~1.6e-02 and a pair below ~2.6e-04. Any claim
+  that a two-guide design achieves escape below about 3e-04 is an extrapolation
+  beyond the evidence — **including claims made by this model**.
+* **`theta`, the fraction of viral genomes never exposed to an active nuclease, is
+  reported separately and never folded into P(escape)**, because guide count cannot
+  touch it. The only *in vivo* on-target measurement in Amrani et al. is ~1% indels
+  in trigeminal ganglia.
+
+---
+
+## Human off-target screening (stage 8)
+
+Full write-up in `results/offtarget_report.md`; `src/offtarget.py`, opt-in with
+`--offtarget`. Ensembl release-116 GRCh38 primary assembly (unmasked, not
+soft/hard-masked; primary, not toplevel), 3,099,750,718 bases over 194 sequences,
+both strands, up to 4 mismatches, PAM `NNGRRN` with `NNGRRT` flagged as its subset,
+coding-exon annotation from the Ensembl 116 GTF for sites at ≤ 3 mismatches.
+
+The search is exact, not heuristic. PAM sparsity discards 15/16 of the genome with
+three vectorised slice comparisons; the pigeonhole principle (m+1 chunks, at least
+one of which must match exactly) prunes ~98% of what is left; survivors are re-read
+from the genome and counted exactly. `tests/test_offtarget.py` proves it the way
+`tests/test_nuclease.py` proves the stage-3 scanner — a structurally independent
+brute-force scan over the whole of chromosome 21, asserting set identity of the hits.
+**Bulges are not modelled**, which Cas-OFFinder does model; that is stated in the
+report in those words.
+
+It was run because it was capable of invalidating this repository's own
+recommendation, and it partly did:
+
+| | ICP0g2 (theirs) | RL2_3441+ (stage 6's pick) | RL2_5335+ |
+|---|---|---|---|
+| NNGRRT sites ≤ 4 mm | 5 | **19** | **3** |
+| NNGRRT sites ≤ 3 mm | 0 | **6** | 0 |
+| NNGRRN sites ≤ 4 mm | 56 | 78 | 41 |
+| NNGRRN sites ≤ 3 mm | 5 | 9 | 2 |
+| coding-exon hits ≤ 3 mm | 0 | 0 | 0 |
+| HSV-1 conservation (n=183) | 0.847 | 1.000 | 1.000 |
+
+One of `RL2_3441+`'s 3-mismatch NNGRRT sites is inside *ABL1*. Independently, the
+screen corroborates Amrani et al.: they report no ≤ 3-mismatch sites for either lead
+guide, and under the canonical NNGRRT PAM this screen finds exactly zero for both,
+computed from a different assembly download by a different algorithm. It also
+vindicates their ICP27 choice — ICP27g1 has the cleanest profile of every ICP27
+candidate screened, and none of the 9 better-conserved filter-passing alternatives
+matches it on all four measures.
+
+---
+
+## The reconciled recommendation
+
+Stages 6, 7 and 8 each proposed a *different* ICP0 replacement, because each
+optimised a different axis. Reconciling them is
+[`results/recommendation.md`](results/recommendation.md), which carries the joint
+table, the selection rule stated before it is applied, and an explicit
+"recommendations withdrawn and why" section.
+
+The single recommendation is **`RL2_5335+` + `ICP27g1` (`UL54_115156+`)** — one guide
+changed from the published pair:
+
+| | ICP0g2 + ICP27g1 (published) | **RL2_5335+ + ICP27g1** |
+|---|---|---|
+| conservation, 183 complete genomes | 0.847 | **1.000** |
+| conservation, gene-level corpus | 0.898 | **1.000** |
+| conservation, sub-genomic tier | 0.952 (21 records) | **1.000 (36 records)** |
+| joint conservation of the pair | 0.825 (151/183) | **0.978 (179/183)** |
+| P(escape) per exposed genome | 9.720e-04 | **2.515e-04** |
+| NNGRRT off-targets ≤ 4 mm / ≤ 3 mm | 5 / 0 | **3 / 0** |
+| NNGRRN off-targets ≤ 4 mm / ≤ 3 mm | 56 / 5 | **41 / 2** |
+| coding-exon hits ≤ 3 mm | 0 | 0 |
+| local GC, 200 bp | 0.840 | **0.725** |
+
+Two results from that reconciliation are worth stating here because they are easy to
+get wrong:
+
+* **Escape probability contributes no information at all to this choice.** All four
+  perfectly conserved, filter-passing ICP0 candidates have identical `q` to ten
+  significant figures and identical joint conservation with ICP27g1, so they are
+  *exactly tied* at P(escape) = 2.515e-04. Stage 7's apparent preference for
+  `RL2_5080+` was an `argmin` over four values that differ only in the 12th
+  significant digit — floating-point summation order, not biology.
+* **There is no candidate that dominates on every axis.** `RL2_5335+` carries two
+  NNGRRN sites at ≤ 3 mismatches where `RL2_3364+` and `RL2_5080+` carry one, so the
+  Pareto set has three members and the choice needs one stated priority: that the
+  canonical `NNGRRT` tier, which is what SaCas9 actually cleaves efficiently and what
+  all four published on-target sites use, outweighs the deliberately permissive
+  `NNGRRN` search tier. That priority is a biological judgement, it is stated rather
+  than smuggled in, and `results/recommendation.md` reports what the answer would
+  have been under the opposite one.
 
 ---
 
@@ -592,13 +803,21 @@ and the report says so at length.
 
 Read these before using any guide from this table.
 
-1. **No off-target screening.** `src/offtarget.py` is a clearly marked stub. No guide
-   here has been checked against the human genome. Any manuscript must state:
-   *"Guides were not screened for off-target activity against the human genome;
-   conservation ranking reflects on-target coverage across HSV-1 isolates only."*
-   The module documents the phase-2 plan and the fact that a 3.1 Gb mismatch-tolerant
-   search cannot honour the pure-Python constraint — that conflict is an explicit
-   phase-2 decision, not an oversight.
+1. **Off-target screening is implemented, but only for the SaCas9 benchmark guide
+   set.** `src/offtarget.py` (stage 8) is no longer a stub: it screens guides against
+   the Ensembl release-116 GRCh38 primary assembly, both strands, genome-wide, at up
+   to 4 mismatches under `NNGRRN` and `NNGRRT`, and annotates sites at ≤ 3 mismatches
+   against the Ensembl GTF. What it has actually been *run* on is the 25-guide
+   stage-6 benchmark set in RL2 and UL54 (plus their 21-nt variants), because that is
+   the set the head-to-head is about. **None of the 4,777 SpCas9 candidates in
+   `results/guides_ranked.tsv` has been screened**, so for those guides the original
+   caveat stands unchanged: *"Guides were not screened for off-target activity
+   against the human genome; conservation ranking reflects on-target coverage across
+   HSV-1 isolates only."* For the guides that *were* screened the correct sentence is
+   the one `src/offtarget.py`'s `caveat()` emits, and it names the two things the
+   screen does not do: **DNA/RNA bulges are not modelled** (Cas-OFFinder models them)
+   and **no cell-based validation** (e.g. GUIDE-seq) was performed. The run log
+   records which of the two sentences applies to that run.
 
 2. **Assembly ambiguity depresses conservation — now quantified.** 100 of the 183
    genomes contain at least one non-ACGT base; 26 have more than 0.1%. A site
@@ -640,9 +859,14 @@ Read these before using any guide from this table.
 
 7. **Cutting is not the whole story.** Perfect conservation and clean expression
    flags say nothing about chromatin accessibility on the incoming or latent viral
-   genome, editing efficiency, or the rate at which NHEJ repair generates
-   cut-resistant escape variants — the last being the actual motivation for multiplex
-   design.
+   genome or about editing efficiency. The last item on this list — the rate at which
+   NHEJ repair generates cut-resistant escape variants, which is the actual
+   motivation for multiplex design — is now modelled by stage 7, but *modelled* is
+   the operative word: its NHEJ indel-length spectrum is a labelled ASSUMPTION rather
+   than a measurement, its absolute escape probabilities move over ~3 orders of
+   magnitude across the plausible parameter space, and with 183 genomes a two-guide
+   set cannot be certified below ~2.6e-04 whatever the repair term says. What is
+   stable across the sweep is the ranking of guide sets, not the numbers.
 
 8. **The per-gene corpus is thinner than GenBank's record counts suggest.** Only
    1,021 of 4,552 sub-genomic HSV-1 records cover any of the seven target genes, and
@@ -650,12 +874,18 @@ Read these before using any guide from this table.
    the form "conserved across thousands of sequences" are not supportable for six of
    the seven genes; see the stage-5 report for the per-gene denominators.
 
-9. **The SaCas9 comparison inherits limitation 1.** Stage 6 ranks published guides
-   against alternatives on conservation alone. Amrani et al. selected on
-   conservation *and* a full off-target pipeline *and* measured antiviral activity in
-   cells; two of those three axes are invisible to this repository. A stage-6 rank is
-   an argument about their selection *metric*, not a claim that a better guide
-   exists all things considered.
+9. **A stage-6 rank is still not a guide-selection decision — and acting as though
+   it were is a mistake this repository actually made.** Stage 6 ranks on
+   conservation alone and, on that basis, named `RL2_3441+`. Stage 8 then screened it
+   and found it dirtier against the human genome than the guide it was proposed to
+   replace, so that recommendation is withdrawn (see
+   [the reconciled recommendation](#the-reconciled-recommendation) and
+   `results/recommendation.md`). Two of the three axes Amrani et al. selected on are
+   now visible here — conservation and off-target burden — and stage 7 adds a fourth
+   they did not quantify at all. The one that remains invisible is **measured
+   antiviral activity in cells**, which is what they actually chose their lead pair
+   on. A rank from any single stage of this pipeline is an argument about a selection
+   *metric*, not a claim that a better guide exists all things considered.
 
 10. **Coverage determination is anchor-based, not alignment-based.** A record is
    admitted to a guide's denominator only when exact 25-mer anchors bracket the guide
@@ -694,6 +924,34 @@ tables `robustness_redundancy.tsv`, `robustness_effective_n.tsv`,
 `data/gene_corpus_manifest.tsv`. Both Entrez queries used to build the gene-level
 corpus are written into the report and the JSON summary.
 
+Stage 7 adds `results/escape_model_report.md`, `results/escape_summary.json` and the
+supporting tables `escape_site_parameters.tsv` (per-site q and cut codon),
+`escape_k_curve.tsv`, `escape_k_curve_one_per_gene.tsv`, `escape_guide_sets.tsv`,
+`escape_codon_tolerance.tsv` (the measured per-codon cross-strain variation),
+`escape_sensitivity.tsv`, `escape_sensitivity_sets.tsv` and `escape_tolerance_qc.tsv`.
+It is deterministic — closed form throughout, with a seeded Monte Carlo cross-check
+that must agree with it — and runs offline from the caches populated by stages 1
+and 5.
+
+Stage 8 adds `results/offtarget_report.md`, `results/offtarget_summary.json`,
+`results/offtarget_summary.tsv` (per-guide counts at each mismatch level under both
+PAM variants), `results/offtarget_sites.tsv` (every site found) and
+`results/offtarget_annotated.tsv` (genomic context for sites at ≤ 3 mismatches). The
+GRCh38 download is verified three independent ways — Ensembl's published BSD `sum`,
+the gzip CRC-32/ISIZE trailer, and a SHA-256 recorded in
+`data/genome/genome_manifest.json` — and the assembly release is pinned, not
+"current", so a floating release cannot silently change the numbers.
+
+`results/recommendation.md` reconciles stages 6, 7 and 8 into one recommendation. It
+is the only file under `results/` that is version-controlled, because it is a written
+argument across stages rather than a regenerable table. Its numbers are not typed by
+hand: `python src/reconcile.py` joins the three stages' outputs on `guide_id`,
+computes the one quantity none of them produced — P(escape) for each ICP0 candidate
+paired with ICP27g1 — evaluates Pareto dominance mechanically, applies the document's
+selection rule from constants in that module, and writes
+`results/recommendation_table.tsv`. It **refuses to report anything unless its rebuilt
+escape model reproduces stage 7's own Amrani lead-pair P(escape) to within 1e-12**.
+
 Stage 6 adds `results/sacas9_benchmark_report.md`,
 `results/sacas9_benchmark_summary.json` (also embedded in `results/run_log.json` when
 the stage runs inside the pipeline), `results/sacas9_benchmark_pool.tsv` (every
@@ -713,7 +971,7 @@ determine the results.
 ## Layout
 
 ```
-run_pipeline.py          single entrypoint, all four stages, run log
+run_pipeline.py          single entrypoint, stages 1-4 plus opt-in 5-8, run log
 src/common.py            paths, logging, Entrez config, rate limit, retry, seq utils
 src/fetch_genomes.py     stage 1 - NCBI retrieval + manifest
 src/extract_guides.py    stage 2 - SpCas9 site enumeration from GenBank annotation
@@ -721,11 +979,18 @@ src/conservation.py      stage 3 - alignment-free exact-match conservation scori
 src/report.py            stage 4 - flags, ranking, guides_ranked.tsv
 src/robustness.py        stage 5 - redundancy, N-sensitivity, denominator sensitivity
 src/benchmark_sacas9.py  stage 6 - SaCas9 head-to-head vs Amrani et al. 2024
+src/escape.py            stage 7 - multiplex escape-probability model
+src/offtarget.py         stage 8 - human GRCh38 off-target screening (implemented)
+src/reconcile.py         joins stages 6-8 into one table; the arithmetic behind
+                         results/recommendation.md (a reader, not a stage)
 src/nuclease.py          nuclease/PAM model (IUPAC, both strands, scanner anchors)
-src/offtarget.py         STUB - human off-target screening, phase 2
 tests/test_core.py       offline unit tests (no network)
 tests/test_robustness.py offline unit tests for stage 5 (no network)
 tests/test_nuclease.py   PAM model + scanner-equivalence proof for every PAM
 tests/test_benchmark.py  offline unit tests for stage 6 (no network)
+tests/test_escape.py     offline unit tests for stage 7 (no network)
+tests/test_offtarget.py  offline unit tests for stage 8 (no network, no genome needed)
+tests/test_reconcile.py  the selection rule of results/recommendation.md, pinned
+results/recommendation.md  the reconciled single recommendation across stages 6-8
 requirements.txt         pinned, installed and tested on CPython 3.14.5
 ```
