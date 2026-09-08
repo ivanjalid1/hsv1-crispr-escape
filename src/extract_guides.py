@@ -1,12 +1,21 @@
-"""Stage 2 -- enumerate every SpCas9 target site in the annotated target genes of a
-reference genome.
+"""Stage 2 -- enumerate every target site of the selected nuclease in the annotated
+target genes of a reference genome.
+
+The nuclease is configurable (`--nuclease`, `--pam`, `--spacer-length`); no PAM
+literal is hardcoded in this file. See `src/nuclease.py` for the model. Defaults are
+SpCas9 / 20 nt / NGG, so default output is unchanged from the SpCas9-only version.
 
 Definitions used throughout the project
 ---------------------------------------
-* protospacer : 20 nt of genomic DNA, 5'->3' on the strand the guide RNA matches.
-* PAM         : the immediately 3' NGG trinucleotide on the same strand.
-* target_23mer: protospacer + PAM, i.e. the 23 nt string whose EXACT presence in
-                another genome (on either strand) defines conservation.
+* protospacer : `spacer_length` nt of genomic DNA, 5'->3' on the strand the guide RNA
+                matches (20 nt for SpCas9, 21 nt for SaCas9).
+* PAM         : the immediately 3' PAM on the same strand, matched against an IUPAC
+                pattern (`NGG` for SpCas9, `NNGRRT`/`NNGRRN` for SaCas9).
+* target_23mer: protospacer + PAM, i.e. the string whose EXACT presence in another
+                genome (on either strand) defines conservation. The column keeps its
+                historical name for back-compatibility, but its LENGTH is
+                nuclease-dependent: 23 nt for SpCas9, 26-27 nt for SaCas9. The
+                `nuclease` and `pam_pattern` columns record which grammar produced it.
 
 Coordinate/strand conventions
 -----------------------------
@@ -41,6 +50,14 @@ import pandas as pd
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.nuclease import (  # noqa: E402
+    DEFAULT_NUCLEASE,
+    KNOWN_PAM_VARIANTS,
+    NUCLEASES,
+    SPCAS9,
+    Nuclease,
+    get_nuclease,
+)
 from src.common import (  # noqa: E402
     DEFAULT_CANDIDATES,
     REF_DIR,
@@ -92,6 +109,8 @@ CANDIDATE_COLUMNS = [
     "n_reference_copies",
     "ref_all_positions",
     "reference_accession",
+    "nuclease",
+    "pam_pattern",
 ]
 
 
@@ -180,38 +199,48 @@ def _valid(seq: str) -> bool:
 
 
 def enumerate_guides_in_segment(genome: str, start0: int, end: int,
-                                protospacer_len: int = 20):
-    """Yield (strand, ref_start1, ref_end1, protospacer, pam, target_23mer).
+                                nuclease: Nuclease | int = SPCAS9):
+    """Yield (strand, ref_start1, ref_end1, protospacer, pam, target_site).
 
-    Only 23-mers lying entirely inside [start0, end) are emitted.
+    Only footprints lying entirely inside [start0, end) are emitted. Both strands are
+    scanned in one pass over the window: the plus-strand PAM sits at the high end of
+    the window, the minus-strand PAM (as the reverse-complement IUPAC pattern) at the
+    low end, so no reverse complement is computed unless there is a hit.
+
+    `nuclease` may be given as an int for backwards compatibility with the old
+    `protospacer_len` positional argument, which then means SpCas9 with that spacer
+    length.
     """
-    total = protospacer_len + 3
+    if isinstance(nuclease, int):
+        nuclease = Nuclease(name=SPCAS9.name, spacer_length=nuclease, pam=SPCAS9.pam)
+    spacer_len = nuclease.spacer_length
+    total = nuclease.target_length
     lo = max(0, start0)
     hi = min(len(genome), end)
     for i in range(lo, hi - total + 1):
         window = genome[i:i + total]
         if not _valid(window):
             continue
-        # Plus-strand protospacer: window == 20 nt protospacer + NGG
-        if window[protospacer_len + 1] == "G" and window[protospacer_len + 2] == "G":
+        # Plus-strand protospacer: window == protospacer + PAM.
+        if nuclease.window_has_plus_pam(window):
             yield ("+", i + 1, i + total,
-                   window[:protospacer_len], window[protospacer_len:], window)
-        # Minus-strand protospacer: reverse complement of window ends in NGG,
-        # which means the plus-strand window starts with CC.
-        if window[0] == "C" and window[1] == "C":
+                   window[:spacer_len], window[spacer_len:], window)
+        # Minus-strand protospacer: the reverse complement of the window ends in a
+        # PAM, i.e. the plus-strand window STARTS with the reverse-complement pattern.
+        if nuclease.window_has_minus_pam(window):
             rc = revcomp(window)
             yield ("-", i + 1, i + total,
-                   rc[:protospacer_len], rc[protospacer_len:], rc)
+                   rc[:spacer_len], rc[spacer_len:], rc)
 
 
 def build_guide_table(genome: str, segments, reference_accession: str,
-                      protospacer_len: int = 20) -> pd.DataFrame:
+                      nuclease: Nuclease = SPCAS9) -> pd.DataFrame:
     """Enumerate guides across all segments and collapse duplicate 23-mers."""
     collapsed: "OrderedDict[str, dict]" = OrderedDict()
 
     for gene, product, locus_tag, seg_start0, seg_end, _fstrand in segments:
         for strand, s1, e1, proto, pam, t23 in enumerate_guides_in_segment(
-                genome, seg_start0, seg_end, protospacer_len):
+                genome, seg_start0, seg_end, nuclease):
             pos_label = f"{s1}-{e1}({strand})"
             existing = collapsed.get(t23)
             if existing is not None:
@@ -221,10 +250,10 @@ def build_guide_table(genome: str, segments, reference_accession: str,
                     existing["_genes"].append(gene)
                 continue
 
-            # Cas9 cuts 3 bp 5' of the PAM. On the plus strand that is between
-            # plus-coordinates (e1-5) and (e1-4); on the minus strand between
-            # (s1+4) and (s1+5).
-            cut = (e1 - 5) if strand == "+" else (s1 + 4)
+            # Predicted blunt cut near the PAM-proximal end of the protospacer.
+            # For SpCas9 (3 nt PAM) this is plus-coordinate e1-5 / s1+4, exactly as
+            # in the original SpCas9-only implementation; see Nuclease.cut_site.
+            cut = nuclease.cut_site(s1, e1, strand)
 
             collapsed[t23] = {
                 "guide_id": f"{gene}_{s1}{strand}",
@@ -245,6 +274,8 @@ def build_guide_table(genome: str, segments, reference_accession: str,
                 "_positions": [pos_label],
                 "_genes": [gene],
                 "reference_accession": reference_accession,
+                "nuclease": nuclease.tag,
+                "pam_pattern": nuclease.pam,
             }
 
     rows = []
@@ -275,8 +306,23 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--feature-type", default="CDS", choices=["CDS", "gene"],
                         help="Annotation feature type to take coordinates from "
                              "(default CDS: coding exons only).")
-    parser.add_argument("--protospacer-length", type=int, default=20,
-                        help="Protospacer length in nt (default 20 for SpCas9).")
+    parser.add_argument("--nuclease", default=DEFAULT_NUCLEASE,
+                        choices=sorted(NUCLEASES),
+                        help="Nuclease whose target-site grammar defines the candidate "
+                             "space. spcas9: 20 nt spacer + NGG. sacas9: 21 nt spacer "
+                             f"+ NNGRRT. (default: {DEFAULT_NUCLEASE})")
+    parser.add_argument("--pam", default=None,
+                        help="Override the PAM with an IUPAC pattern, 5'->3' and 3' of "
+                             "the protospacer. Known variants: "
+                             + "; ".join(f"{k}: {', '.join(v)}"
+                                         for k, v in KNOWN_PAM_VARIANTS.items())
+                             + ". Any IUPAC string is accepted.")
+    parser.add_argument("--spacer-length", "--protospacer-length", type=int,
+                        default=None, dest="spacer_length",
+                        help="Override the protospacer length in nt (default: the "
+                             "nuclease's own -- 20 for SpCas9, 21 for SaCas9). Use "
+                             "--spacer-length 20 with --nuclease sacas9 to reproduce "
+                             "the 20 nt spacers reported by Amrani et al. 2024.")
     parser.add_argument("--candidates", type=Path, default=DEFAULT_CANDIDATES,
                         help="Output TSV of candidate guides.")
     parser.add_argument("--refresh-reference", action="store_true",
@@ -287,6 +333,11 @@ def run(args: argparse.Namespace) -> pd.DataFrame:
     from Bio import SeqIO
 
     ensure_dirs()
+    nuclease = get_nuclease(getattr(args, "nuclease", DEFAULT_NUCLEASE),
+                            getattr(args, "pam", None),
+                            getattr(args, "spacer_length", None))
+    LOG.info("Nuclease: %s -> %d nt target footprint.",
+             nuclease.label, nuclease.target_length)
     path = fetch_reference(args.reference, refresh=args.refresh_reference)
     record = SeqIO.read(path, "genbank")
     genome = str(record.seq).upper()
@@ -298,7 +349,7 @@ def run(args: argparse.Namespace) -> pd.DataFrame:
     if not segments:
         raise SystemExit(f"No {args.feature_type} features matched genes: {genes}")
 
-    df = build_guide_table(genome, segments, record.id, args.protospacer_length)
+    df = build_guide_table(genome, segments, record.id, nuclease)
     args.candidates.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(args.candidates, sep="\t", index=False)
 

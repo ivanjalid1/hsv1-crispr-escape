@@ -40,6 +40,19 @@ DEFAULT_ROBUSTNESS_REPORT = RESULTS_DIR / "robustness_report.md"
 TOOL_NAME = "hsv-crispr-conservation"
 
 
+def namespaced(path: Path, tag: str) -> Path:
+    """Move a default results path into a per-nuclease sub-directory.
+
+    `namespaced(results/guides_ranked.tsv, "sacas9") -> results/sacas9/guides_ranked.tsv`.
+    The SpCas9 tag is deliberately NOT namespaced: the SpCas9 outputs documented in the
+    README keep their historical paths, so an existing run is never shadowed or
+    overwritten by a run under a different nuclease.
+    """
+    if tag == "spcas9":
+        return path
+    return path.parent / tag / path.name
+
+
 def ensure_dirs() -> None:
     for d in (DATA_DIR, RAW_DIR, REF_DIR, META_DIR, GENE_DIR, RESULTS_DIR):
         d.mkdir(parents=True, exist_ok=True)

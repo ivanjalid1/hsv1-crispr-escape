@@ -1,10 +1,12 @@
-"""Stage 3 -- alignment-free conservation scoring by exact 23-mer presence.
+"""Stage 3 -- alignment-free conservation scoring by exact target-site presence.
 
 Method (deliberately alignment-free)
 ------------------------------------
-A guide is "present" in a genome if its 23-mer (protospacer + PAM) occurs VERBATIM
-in that genome on either strand. No multiple sequence alignment is performed or
-required: a mismatch anywhere in the protospacer or in the GG of the PAM makes the
+A guide is "present" in a genome if its target site (protospacer + PAM; 23 nt for
+SpCas9, 26-27 nt for SaCas9) occurs VERBATIM in that genome on either strand. No
+multiple sequence alignment is performed or
+required: a mismatch anywhere in the protospacer or in the constrained positions of
+the PAM makes the
 site a different site, and for the purpose of "will this guide cut this isolate?"
 exact presence is the biologically relevant test. This removes every external
 binary dependency (MAFFT/MUSCLE/Clustal) from the pipeline.
@@ -20,17 +22,28 @@ genomes). Neither is it practical to store every 23-mer of every genome in a set
 
 Instead we invert the problem and scan each genome exactly once:
 
-  1. Build two small dictionaries keyed by the guide 23-mers themselves:
+  1. Build two small dictionaries keyed by the guide target sites themselves
+     (23 nt for SpCas9, 26-27 nt for SaCas9):
        fwd[target_23mer]              -> guide_id   (guide on the genome's plus strand)
        rev[revcomp(target_23mer)]     -> guide_id   (guide on the genome's minus strand)
      Together these cover both strands for every guide regardless of which strand
      the guide came from in the reference. Memory is O(G), a few thousand entries.
 
-  2. Every SpCas9 target 23-mer ends in NGG, so on the plus strand it must contain
-     "GG" at offset 21, and its reverse complement must contain "CC" at offset 0.
-     We therefore do not test all L positions: we jump between occurrences of "GG"
-     and of "CC" using str.find, which runs in optimised C. Only those candidate
-     positions produce a slice and a dict lookup.
+  2. Every target site of a given nuclease carries the LITERAL positions of its PAM
+     pattern at fixed offsets: an SpCas9 (NGG) 23-mer always has "GG" at offset 21,
+     and a SaCas9 (NNGRRT) 27-mer always has "G" at offset 23 and "T" at offset 26.
+     We therefore do not test all L positions: we jump between occurrences of one
+     such literal anchor using str.find, which runs in optimised C. Only those
+     candidate positions produce a slice and a dict lookup. The anchors come from
+     src/nuclease.py, so no PAM literal is hardcoded here; when several anchors are
+     equally long the scanner picks, per sequence, the one that occurs least often
+     (for a 68% GC herpesvirus genome the "T" of NNGRRT is ~3x rarer than the "G").
+     A PAM with no literal position at all yields no anchors and the scanner falls
+     back to testing every position -- slower, still exact.
+
+     tests/test_nuclease.py proves set-identity between this scan and a naive
+     both-strand substring search for every supported PAM, on randomised sequences
+     and on the real HSV-1 reference genome.
 
 Total work is O(S x L) with a small constant, and O(G) memory. In practice this
 scores thousands of guides against hundreds of genomes in seconds.
@@ -56,6 +69,7 @@ import pandas as pd
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.nuclease import SPCAS9, Nuclease, get_nuclease  # noqa: E402
 from src.common import (  # noqa: E402
     DEFAULT_CANDIDATES,
     DEFAULT_CONSERVATION,
@@ -94,36 +108,82 @@ def build_lookup(target_23mers: dict[str, str]) -> tuple[dict[str, str], dict[st
 
 
 def scan_genome(seq: str, fwd: dict[str, str], rev: dict[str, str],
-                k: int = 23, pam_gg_offset: int = 21) -> set[str]:
-    """Return the set of guide_ids whose 23-mer occurs in `seq` on either strand."""
+                nuclease: Nuclease = SPCAS9) -> set[str]:
+    """Return the set of guide_ids whose target site occurs in `seq` on either strand.
+
+    Exact by construction: an occurrence of a target site necessarily contains the
+    nuclease's literal PAM anchor at a fixed offset, so jumping between anchor
+    occurrences cannot miss a hit. Falls back to an exhaustive positional scan when
+    the PAM has no literal position at all.
+    """
     hits: set[str] = set()
     n = len(seq)
+    k = nuclease.target_length
+    if n < k:
+        return hits
+    anchors = nuclease.scan_anchors
 
-    # Plus-strand occurrences: the 23-mer ends in NGG, so "GG" sits at offset 21.
-    pos = seq.find("GG")
-    while pos != -1:
-        start = pos - pam_gg_offset
-        if start >= 0:
-            gid = fwd.get(seq[start:start + k])
-            if gid is not None:
-                hits.add(gid)
-        pos = seq.find("GG", pos + 1)
+    def _sweep(table: dict[str, str], literal: str, offset: int) -> None:
+        """Probe every position where `literal` occurs at `offset` inside the site."""
+        if not literal:
+            for start in range(0, n - k + 1):
+                gid = table.get(seq[start:start + k])
+                if gid is not None:
+                    hits.add(gid)
+            return
+        pos = seq.find(literal)
+        while pos != -1:
+            start = pos - offset
+            if start >= 0 and start + k <= n:
+                gid = table.get(seq[start:start + k])
+                if gid is not None:
+                    hits.add(gid)
+            pos = seq.find(literal, pos + 1)
 
-    # Minus-strand occurrences: the reverse complement of the 23-mer starts with "CC".
-    pos = seq.find("CC")
-    while pos != -1:
-        if pos + k <= n:
-            gid = rev.get(seq[pos:pos + k])
-            if gid is not None:
-                hits.add(gid)
-        pos = seq.find("CC", pos + 1)
+    if not anchors:
+        # No literal PAM position anywhere: exhaustive scan against both maps.
+        _sweep(fwd, "", 0)
+        _sweep(rev, "", 0)
+        return hits
 
+    # Plus-strand occurrences of the target site: anchor as-is, at its own offset.
+    plus_literal, plus_offset = min(anchors, key=lambda a: (seq.count(a[0]), a[1]))
+    _sweep(fwd, plus_literal, plus_offset)
+
+    # Minus-strand occurrences: the rev map is keyed on revcomp(target), in which the
+    # anchor appears reverse-complemented and mirrored to offset k - offset - len.
+    rc_anchors = [(revcomp(lit), k - off - len(lit)) for lit, off in anchors]
+    rc_literal, rc_offset = min(rc_anchors, key=lambda a: (seq.count(a[0]), a[1]))
+    _sweep(rev, rc_literal, rc_offset)
+
+    return hits
+
+
+def scan_genome_naive(seq: str, fwd: dict[str, str], rev: dict[str, str],
+                      nuclease: Nuclease = SPCAS9) -> set[str]:
+    """Reference implementation of `scan_genome`: test every position, no anchors.
+
+    Kept in the shipped module rather than only in the tests, because it is what the
+    fast scanner is validated against and it documents exactly what "present" means.
+    O(L) slices per strand; far too slow for production use.
+    """
+    hits: set[str] = set()
+    k = nuclease.target_length
+    for start in range(0, len(seq) - k + 1):
+        site = seq[start:start + k]
+        gid = fwd.get(site)
+        if gid is not None:
+            hits.add(gid)
+        gid = rev.get(site)
+        if gid is not None:
+            hits.add(gid)
     return hits
 
 
 def score_conservation(candidates: pd.DataFrame, manifest: pd.DataFrame,
                        max_ambiguous_fraction: float | None = None,
-                       record_absences: int = 25) -> pd.DataFrame:
+                       record_absences: int = 25,
+                       nuclease: Nuclease = SPCAS9) -> pd.DataFrame:
     used = manifest
     if max_ambiguous_fraction is not None:
         before = len(used)
@@ -138,8 +198,8 @@ def score_conservation(candidates: pd.DataFrame, manifest: pd.DataFrame,
 
     target_map = dict(zip(candidates["guide_id"], candidates["target_23mer"]))
     fwd, rev = build_lookup(target_map)
-    LOG.info("Scoring %d guides against %d genomes (%d lookup keys).",
-             len(target_map), len(used), len(fwd) + len(rev))
+    LOG.info("Scoring %d %s guides against %d genomes (%d lookup keys).",
+             len(target_map), nuclease.label, len(used), len(fwd) + len(rev))
 
     present_counts = {gid: 0 for gid in target_map}
     absent_lists: dict[str, list[str]] = {gid: [] for gid in target_map}
@@ -149,7 +209,7 @@ def score_conservation(candidates: pd.DataFrame, manifest: pd.DataFrame,
         if not path.is_file():
             raise SystemExit(f"Manifest references a missing FASTA: {path}")
         seq = load_genome(path)
-        hits = scan_genome(seq, fwd, rev)
+        hits = scan_genome(seq, fwd, rev, nuclease)
         for gid in target_map:
             if gid in hits:
                 present_counts[gid] += 1
@@ -174,6 +234,27 @@ def score_conservation(candidates: pd.DataFrame, manifest: pd.DataFrame,
 
     df = pd.DataFrame(rows, columns=CONSERVATION_COLUMNS)
     return df.sort_values("guide_id", kind="stable").reset_index(drop=True)
+
+
+def nuclease_from_candidates(candidates: pd.DataFrame,
+                             args: "argparse.Namespace | None" = None) -> Nuclease:
+    """Recover the nuclease that produced a candidate table.
+
+    Stage 2 writes `nuclease` and `pam_pattern` columns; they are authoritative, so a
+    conservation run can never be scored under a different grammar than the one that
+    enumerated the sites. Candidate tables written before those columns existed are
+    SpCas9 by definition, and fall back to the CLI arguments.
+    """
+    if "pam_pattern" in candidates.columns and len(candidates):
+        pam = str(candidates["pam_pattern"].iloc[0])
+        name = str(candidates["nuclease"].iloc[0]).split("-")[0]
+        spacer = len(str(candidates["protospacer"].iloc[0]))
+        return get_nuclease(name, pam, spacer)
+    if args is not None:
+        return get_nuclease(getattr(args, "nuclease", SPCAS9.name),
+                            getattr(args, "pam", None),
+                            getattr(args, "spacer_length", None))
+    return SPCAS9
 
 
 def sanity_check_reference(candidates: pd.DataFrame, conservation: pd.DataFrame,
@@ -219,7 +300,9 @@ def run(args: argparse.Namespace) -> pd.DataFrame:
     if candidates.empty:
         raise SystemExit("Candidate guide table is empty.")
 
-    df = score_conservation(candidates, manifest, args.max_ambiguous_fraction)
+    nuclease = nuclease_from_candidates(candidates, args)
+    df = score_conservation(candidates, manifest, args.max_ambiguous_fraction,
+                            nuclease=nuclease)
     sanity_check_reference(candidates, df, manifest)
 
     args.conservation.parent.mkdir(parents=True, exist_ok=True)

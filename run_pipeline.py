@@ -23,6 +23,17 @@ Examples
     # HSV-2 instead
     python run_pipeline.py --taxid 10310 --reference NC_001798
 
+    # stage 6: the SaCas9 head-to-head against Amrani et al. 2024 (offline)
+    python run_pipeline.py --skip-fetch --benchmark-sacas9
+
+    # SaCas9 (21 nt spacer, NNGRRT PAM) instead of SpCas9. Outputs are namespaced
+    # under results/sacas9/ so the SpCas9 results are never overwritten.
+    python run_pipeline.py --nuclease sacas9 --skip-fetch
+
+    # the more permissive SaCas9 PAM, and the 20 nt spacers of Amrani et al. 2024
+    python run_pipeline.py --nuclease sacas9 --pam NNGRRN --skip-fetch
+    python run_pipeline.py --nuclease sacas9 --spacer-length 20 --skip-fetch
+
 NCBI_EMAIL must be set in the environment. Nothing is hardcoded.
 """
 
@@ -38,6 +49,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from src import benchmark_sacas9 as stage_benchmark  # noqa: E402
 from src import conservation as stage_conservation  # noqa: E402
 from src import extract_guides as stage_guides  # noqa: E402
 from src import fetch_genomes as stage_fetch  # noqa: E402
@@ -45,12 +57,17 @@ from src import offtarget  # noqa: E402
 from src import report as stage_report  # noqa: E402
 from src import robustness as stage_robustness  # noqa: E402
 from src.common import (  # noqa: E402
-    DEFAULT_RUNLOG,
+    DEFAULT_CANDIDATES,
+    DEFAULT_CONSERVATION,
+    DEFAULT_RANKED,
+    DEFAULT_ROBUSTNESS_REPORT,
     MissingCredentialsError,
     ensure_dirs,
+    namespaced,
     setup_logging,
     utc_now_iso,
 )
+from src.nuclease import get_nuclease  # noqa: E402
 
 LOG = logging.getLogger("pipeline")
 
@@ -78,6 +95,7 @@ def build_parser() -> argparse.ArgumentParser:
     stage_conservation.add_arguments(parser)
     stage_report.add_arguments(parser)
     stage_robustness.add_arguments(parser)
+    stage_benchmark.add_arguments(parser)
 
     parser.add_argument("--force", action="store_true",
                         help="Recompute every stage even if outputs exist.")
@@ -87,11 +105,35 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def apply_nuclease_namespace(args: argparse.Namespace):
+    """Resolve the nuclease and, for anything other than SpCas9, move the outputs
+    into results/<tag>/ unless the user gave an explicit path.
+
+    Outputs are namespaced rather than overwritten because the SpCas9 result set is
+    published in the README: a SaCas9 run must never silently replace it.
+    """
+    nuclease = get_nuclease(args.nuclease, args.pam, args.spacer_length)
+    tag = nuclease.tag
+    defaults = {
+        "candidates": DEFAULT_CANDIDATES,
+        "conservation": DEFAULT_CONSERVATION,
+        "ranked": DEFAULT_RANKED,
+        "robustness_report": DEFAULT_ROBUSTNESS_REPORT,
+    }
+    for attr, default in defaults.items():
+        if getattr(args, attr) == default:
+            setattr(args, attr, namespaced(default, tag))
+    args.ranked.parent.mkdir(parents=True, exist_ok=True)
+    args.run_log = args.ranked.parent / "run_log.json"
+    return nuclease
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     setup_logging(args.verbose)
     ensure_dirs()
+    nuclease = apply_nuclease_namespace(args)
 
     started = utc_now_iso()
     t0 = time.time()
@@ -100,6 +142,8 @@ def main(argv: list[str] | None = None) -> int:
     LOG.info("=" * 78)
     LOG.info("HSV CRISPR-Cas9 conserved guide pipeline")
     LOG.info("Python %s on %s", platform.python_version(), platform.platform())
+    LOG.info("Nuclease: %s; target footprint %d nt; outputs -> %s",
+             nuclease.label, nuclease.target_length, args.ranked.parent)
     LOG.info("=" * 78)
 
     # ---- Stage 1: genomes -------------------------------------------------------
@@ -132,7 +176,10 @@ def main(argv: list[str] | None = None) -> int:
         cached_ref = str(cached["reference_accession"].iloc[0]).split(".")[0] if len(cached) else ""
         cached_genes = {g for cell in cached["gene"].astype(str) for g in cell.split("|")}
         wanted_genes = {g.strip().upper() for g in args.genes.split(",") if g.strip()}
-        if cached_ref != args.reference.split(".")[0] or not wanted_genes <= cached_genes:
+        cached_tag = (str(cached["nuclease"].iloc[0]) if "nuclease" in cached.columns
+                      and len(cached) else "spcas9")
+        if (cached_ref != args.reference.split(".")[0] or not wanted_genes <= cached_genes
+                or cached_tag != nuclease.tag):
             LOG.warning("      cached candidate table does not match --reference/--genes; "
                         "rebuilding.")
             rebuild_guides = True
@@ -170,6 +217,13 @@ def main(argv: list[str] | None = None) -> int:
                  "see results/robustness_report.md for what that denominator is worth.",
                  len(manifest))
 
+    # ---- Stage 6 (opt-in): SaCas9 head-to-head -----------------------------------
+    benchmark_summary = None
+    if args.benchmark_sacas9:
+        LOG.info("[6/6] SaCas9 benchmark vs Amrani et al. 2024 (opt-in) ...")
+        benchmark_summary = stage_benchmark.run(args)
+        stages_run.append("benchmark_sacas9")
+
     # ---- Run log ----------------------------------------------------------------
     import numpy
     import Bio
@@ -190,6 +244,7 @@ def main(argv: list[str] | None = None) -> int:
         "reference_accession": str(candidates["reference_accession"].iloc[0])
         if len(candidates) else None,
         "target_genes": args.genes,
+        "nuclease": nuclease.as_dict(),
         "entrez_query": str(manifest["entrez_query"].iloc[0]) if len(manifest) else None,
         "retrieval_date_utc": str(manifest["retrieval_date_utc"].iloc[0])
         if len(manifest) else None,
@@ -203,13 +258,14 @@ def main(argv: list[str] | None = None) -> int:
             "caveat": offtarget.caveat(),
         },
         "robustness": robustness_summary,
+        "sacas9_benchmark": benchmark_summary,
     }
-    DEFAULT_RUNLOG.parent.mkdir(parents=True, exist_ok=True)
-    DEFAULT_RUNLOG.write_text(json.dumps(run_log, indent=2), encoding="utf-8")
+    args.run_log.parent.mkdir(parents=True, exist_ok=True)
+    args.run_log.write_text(json.dumps(run_log, indent=2), encoding="utf-8")
 
     LOG.info("-" * 78)
     LOG.info("DONE in %.1fs. Ranked guides: %s", run_log["elapsed_seconds"], args.ranked)
-    LOG.info("Run log (accessions, query, versions): %s", DEFAULT_RUNLOG)
+    LOG.info("Run log (accessions, query, versions): %s", args.run_log)
     LOG.warning("REMINDER: %s", offtarget.caveat())
     return 0
 

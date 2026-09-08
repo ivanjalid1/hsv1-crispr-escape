@@ -111,7 +111,13 @@ from src.common import (  # noqa: E402
     setup_logging,
     utc_now_iso,
 )
-from src.conservation import build_lookup, load_genome, scan_genome  # noqa: E402
+from src.conservation import (  # noqa: E402
+    build_lookup,
+    load_genome,
+    nuclease_from_candidates,
+    scan_genome,
+)
+from src.nuclease import SPCAS9, Nuclease  # noqa: E402
 
 LOG = logging.getLogger("robustness")
 
@@ -587,7 +593,8 @@ def score_benchmark(seq: str, targets: dict[str, str]) -> set[str]:
 
 
 def scan_complete_genomes(manifest: pd.DataFrame, candidates: pd.DataFrame,
-                          reference: str, args) -> dict:
+                          reference: str, args,
+                          nuclease: Nuclease = SPCAS9) -> dict:
     """Single pass producing everything parts A and B need.
 
     Returns dense per-(genome, guide) status and presence matrices plus per-genome
@@ -619,7 +626,7 @@ def scan_complete_genomes(manifest: pd.DataFrame, candidates: pd.DataFrame,
         seq = load_genome(path)
         sketches.append(minhash_sketch(seq, args.minhash_k, args.minhash_sketch))
 
-        hits = scan_genome(seq, fwd, rev)
+        hits = scan_genome(seq, fwd, rev, nuclease)
         oriented, _strand, anchors = orient_and_anchor(seq, index, args.anchor_k,
                                                        args.anchor_step)
         chains = chain_anchors(anchors, args.anchor_k, args.anchor_max_gap,
@@ -894,7 +901,7 @@ def fetch_gene_corpus(queries: list[tuple[str, str]], batch_size: int,
 
 def gene_level_analysis(records: list[tuple[str, str]], candidates: pd.DataFrame,
                         reference: str, gene_spans: dict[str, list[tuple[int, int]]],
-                        args) -> dict:
+                        args, nuclease: Nuclease = SPCAS9) -> dict:
     """Part C: re-measure the same guides against the gene-level corpus."""
     guide_ids = candidates["guide_id"].tolist()
     target_map = dict(zip(candidates["guide_id"], candidates["target_23mer"]))
@@ -939,7 +946,7 @@ def gene_level_analysis(records: list[tuple[str, str]], candidates: pd.DataFrame
         chains = chain_anchors(anchors, args.anchor_k, args.anchor_max_gap,
                                args.anchor_max_drift, args.anchor_min_anchors)
         amb = ambiguous_positions(oriented)
-        hits = scan_genome(seq, fwd, rev)
+        hits = scan_genome(seq, fwd, rev, nuclease)
 
         genes_touched: set[str] = set()
         scored: set[int] = set()
@@ -1687,7 +1694,9 @@ def run(args: argparse.Namespace) -> dict:
     LOG.info("Reference %s: %d bp. %d guides, %d genomes.",
              reference_accession, len(reference), len(candidates), len(manifest))
 
-    scan = scan_complete_genomes(manifest, candidates, reference, args)
+    nuclease = nuclease_from_candidates(candidates, args)
+    LOG.info("Nuclease of the candidate table: %s", nuclease.label)
+    scan = scan_complete_genomes(manifest, candidates, reference, args, nuclease)
     LOG.info("Part A: redundancy / effective sample size ...")
     red = redundancy_analysis(manifest, scan, args)
     LOG.info("  effective sample size at %.4f identity: %d clusters (from %d genomes)",
@@ -1697,11 +1706,14 @@ def run(args: argparse.Namespace) -> dict:
     LOG.info("  perfect strict=%d  n-tolerant=%d", amb["perfect_strict"],
              amb["perfect_n_tolerant"])
 
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    red["per_genome"].to_csv(RESULTS_DIR / "robustness_redundancy.tsv", sep="\t", index=False)
-    red["sweep"].to_csv(RESULTS_DIR / "robustness_effective_n.tsv", sep="\t", index=False)
-    amb["sweep"].to_csv(RESULTS_DIR / "robustness_ambiguity_sweep.tsv", sep="\t", index=False)
-    amb["per_guide"].to_csv(RESULTS_DIR / "robustness_conservation_modes.tsv",
+    # Outputs live next to the report, so a non-default (nuclease-namespaced)
+    # --robustness-report path carries the whole stage-5 output set with it.
+    out_dir = args.robustness_report.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    red["per_genome"].to_csv(out_dir / "robustness_redundancy.tsv", sep="\t", index=False)
+    red["sweep"].to_csv(out_dir / "robustness_effective_n.tsv", sep="\t", index=False)
+    amb["sweep"].to_csv(out_dir / "robustness_ambiguity_sweep.tsv", sep="\t", index=False)
+    amb["per_guide"].to_csv(out_dir / "robustness_conservation_modes.tsv",
                             sep="\t", index=False)
 
     gene_level = None
@@ -1730,8 +1742,9 @@ def run(args: argparse.Namespace) -> dict:
             records = []
         if records:
             spans = collect_gene_spans(reference_accession, genes)
-            gene_level = gene_level_analysis(records, candidates, reference, spans, args)
-            gene_level["per_guide"].to_csv(RESULTS_DIR / "robustness_gene_level.tsv",
+            gene_level = gene_level_analysis(records, candidates, reference, spans,
+                                             args, nuclease)
+            gene_level["per_guide"].to_csv(out_dir / "robustness_gene_level.tsv",
                                            sep="\t", index=False)
             gene_level["corpus_manifest"].to_csv(args.gene_manifest, sep="\t", index=False)
             base = amb["per_guide"][["guide_id", "conservation_strict"]]
@@ -1775,7 +1788,7 @@ def run(args: argparse.Namespace) -> dict:
                     "median_record_bp": int(sub["length_bp"].median()) if len(sub) else 0,
                 })
             gene_record_counts = pd.DataFrame(rows)
-            gene_record_counts.to_csv(RESULTS_DIR / "robustness_gene_records.tsv",
+            gene_record_counts.to_csv(out_dir / "robustness_gene_records.tsv",
                                       sep="\t", index=False)
 
             # Per gene, on the independent (sub-genomic) tier only. This is where the
@@ -1801,7 +1814,7 @@ def run(args: argparse.Namespace) -> dict:
                         if len(perfect) else None),
                 })
             gene_tier_table = pd.DataFrame(grows)
-            gene_tier_table.to_csv(RESULTS_DIR / "robustness_gene_level_by_gene.tsv",
+            gene_tier_table.to_csv(out_dir / "robustness_gene_level_by_gene.tsv",
                                    sep="	", index=False)
         elif skip_reason is None:
             skip_reason = "no corpus records were retrieved"
@@ -1825,7 +1838,7 @@ def run(args: argparse.Namespace) -> dict:
                 round(bcov["present"] / bcov["covered"], 4) if bcov["covered"] else float("nan"))
         bench_rows.append(row)
     benchmark_table = pd.DataFrame(bench_rows)
-    benchmark_table.to_csv(RESULTS_DIR / "robustness_benchmark_guides.tsv",
+    benchmark_table.to_csv(out_dir / "robustness_benchmark_guides.tsv",
                            sep="\t", index=False)
 
     top_clusters = (red["per_genome"][red["per_genome"]["cluster_size"] > 1]
@@ -1913,7 +1926,7 @@ def run(args: argparse.Namespace) -> dict:
         "benchmark_guides": benchmark_table.to_dict(orient="records"),
         "parameters": ctx["parameters"],
     }
-    (RESULTS_DIR / "robustness_summary.json").write_text(
+    (out_dir / "robustness_summary.json").write_text(
         json.dumps(summary, indent=2, default=str), encoding="utf-8")
     return summary
 

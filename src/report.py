@@ -38,7 +38,6 @@ from src.common import (  # noqa: E402
     DEFAULT_CANDIDATES,
     DEFAULT_CONSERVATION,
     DEFAULT_RANKED,
-    RESULTS_DIR,
     ensure_dirs,
     setup_logging,
 )
@@ -164,7 +163,10 @@ def run(args: argparse.Namespace) -> pd.DataFrame:
     LOG.info("Wrote ranked guide table (%d rows) -> %s", len(df), args.ranked)
 
     summary = summarise(df)
-    (RESULTS_DIR / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    # Written next to the ranked table rather than at a fixed path, so that a
+    # nuclease-namespaced run (results/<tag>/) keeps its summary with its results.
+    (args.ranked.parent / "summary.json").write_text(json.dumps(summary, indent=2),
+                                                     encoding="utf-8")
 
     LOG.info("Conservation distribution over %d genomes:", summary["n_strains_total"])
     for label, count in summary["conservation_cumulative_counts"].items():

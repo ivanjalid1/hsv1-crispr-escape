@@ -1,9 +1,17 @@
 # Conserved CRISPR-Cas9 target sites in HSV-1
 
 Phase 1 of a computational study on escape-resistant multiplex guide RNA design for
-herpes simplex virus. This pipeline identifies SpCas9 target sites in essential
+herpes simplex virus. This pipeline identifies CRISPR target sites in essential
 HSV-1 genes that are **perfectly conserved across every publicly available complete
 HSV-1 genome**, using an alignment-free exact-match method.
+
+The nuclease is configurable: **SpCas9** (20 nt spacer, `NGG`) and **SaCas9**
+(21 nt spacer, `NNGRRT`, or the permissive `NNGRRN`) are supported, with IUPAC PAM
+patterns handled generically. That matters because the published competitor this
+work benchmarks against -- Amrani et al. 2024, EBT-104 -- uses SaCas9, so an
+SpCas9-only candidate set is not comparable to theirs site-for-site. Stage 6 does
+that comparison directly; see
+[SaCas9 head-to-head](#sacas9-head-to-head-with-amrani-et-al-2024).
 
 It is deliberately dependency-light: pure Python plus Biopython, pandas and numpy.
 No conda, no WSL, no MAFFT/MUSCLE/Clustal, no compiled tooling beyond what pip
@@ -15,9 +23,10 @@ wheels provide.
 
 **Conservation is defined as exact substring presence, not alignment identity.**
 
-For every candidate guide we take the 23-mer `protospacer(20) + PAM(NGG, 3)` and ask,
-for each downloaded genome, a single yes/no question: *does this exact 23-mer occur
-verbatim in that genome, on either strand?*
+For every candidate guide we take the target site `protospacer + PAM` -- a 23-mer for
+SpCas9 (`20 + NGG`), a 27-mer for SaCas9 (`21 + NNGRRT`) -- and ask, for each
+downloaded genome, a single yes/no question: *does this exact site occur verbatim in
+that genome, on either strand?*
 
 ```
 conservation_fraction = n_strains_present / n_strains_total
@@ -53,17 +62,53 @@ Instead `src/conservation.py` inverts the problem and scans each genome once:
 1. Build two small dictionaries keyed on the guide 23-mers themselves —
    `fwd[t23] -> guide_id` and `rev[revcomp(t23)] -> guide_id`. Together these cover
    both strands for every guide. Memory is `O(G)`: a few thousand entries.
-2. Every SpCas9 target ends in `NGG`, so on the plus strand it must contain `GG` at
-   offset 21, and its reverse complement must start with `CC`. Rather than testing
-   all L positions we jump between occurrences of `GG` and `CC` using `str.find`,
-   which runs in optimised C. Only those candidate positions produce a slice and a
-   dict lookup.
+2. Every target site carries the *literal* positions of its PAM pattern at fixed
+   offsets: an SpCas9 site always has `GG` at offset 21, a SaCas9 `NNGRRT` site
+   always has `G` at offset 23 and `T` at offset 26. Rather than testing all L
+   positions we jump between occurrences of one such literal anchor using
+   `str.find`, which runs in optimised C. Only those candidate positions produce a
+   slice and a dict lookup. The anchors are derived from the PAM pattern in
+   `src/nuclease.py`, so no PAM literal is hardcoded in the scanner; where several
+   anchors are equally long the scanner picks, per sequence, the one that occurs
+   least often (in a 68% GC genome the `T` of `NNGRRT` is ~3x rarer than the `G`).
+   A PAM with no literal position at all falls back to an exhaustive positional
+   scan -- slower, still exact.
 
 Work is `O(S x L)` with a small constant, memory is `O(G)`. Measured: **~95x faster
 than brute force**, scoring 4,777 guides against 183 genomes in about 3 seconds.
 `tests/test_core.py::test_scan_matches_bruteforce` proves on randomised sequences
 that the jump scan returns *exactly* the same result set as a naive both-strand
-search — the optimisation is not an approximation.
+search — the optimisation is not an approximation. Because the anchors are now
+PAM-derived rather than hardcoded, that proof is repeated for **every supported PAM**
+in `tests/test_nuclease.py`: `NGG`, `NAG`, `NNGRRT`, `NNGRRN`, a literal-free `NNN`
+(which exercises the exhaustive fallback) and two synthetic grammars, each against a
+naive both-strand substring search on randomised sequences, on GC-rich sequences and
+on the real HSV-1 reference. `scan_genome_naive` -- that reference implementation --
+ships in `src/conservation.py` rather than only in the tests.
+
+### The nuclease model (`src/nuclease.py`)
+
+A `Nuclease` is `spacer_length` + an IUPAC `pam` pattern 3' of the protospacer, and
+everything else is derived from it: footprint length, PAM matching on both strands
+(the minus-strand PAM is matched as the reverse-complement *pattern* at the low end
+of the plus-strand window), the scanner's literal anchors, the predicted cut site,
+and the output namespace tag.
+
+| nuclease | spacer | PAM | footprint | selector |
+|---|---|---|---|---|
+| SpCas9 | 20 nt | `NGG` | 23 nt | `--nuclease spcas9` (default) |
+| SaCas9 | 21 nt | `NNGRRT` | 27 nt | `--nuclease sacas9` |
+| SaCas9, permissive | 21 nt | `NNGRRN` | 27 nt | `--nuclease sacas9 --pam NNGRRN` |
+| SaCas9, Amrani et al. spacer length | 20 nt | `NNGRRT` | 26 nt | `--nuclease sacas9 --spacer-length 20` |
+
+`--pam` accepts any IUPAC string. 5'-PAM nucleases (Cas12a) are **rejected with an
+explicit error** rather than half-supported: their cut geometry is staggered and
+PAM-distal, and faking it would produce plausible-looking wrong coordinates.
+
+Defaults are unchanged, and this was verified rather than assumed: after the
+refactor, stage 2 re-run under SpCas9 produces the same 4,777 guides with every
+original column byte-identical, and stages 3-4 reproduce `conservation.tsv`,
+`guides_ranked.tsv` and `summary.json` byte-for-byte.
 
 ---
 
@@ -139,6 +184,18 @@ python run_pipeline.py --taxid 10310 --reference NC_001798
 # a different gene set
 python run_pipeline.py --genes UL30,UL29,UL54
 
+# SaCas9 instead of SpCas9 -- outputs are namespaced under results/sacas9/,
+# so the SpCas9 result set is never overwritten
+python run_pipeline.py --nuclease sacas9 --skip-fetch
+
+# the permissive SaCas9 PAM, and the 20 nt spacer length used by Amrani et al.
+python run_pipeline.py --nuclease sacas9 --pam NNGRRN --skip-fetch
+python run_pipeline.py --nuclease sacas9 --spacer-length 20 --skip-fetch
+
+# stage 6: the SaCas9 head-to-head against Amrani et al. 2024 (offline, ~50 s)
+python run_pipeline.py --skip-fetch --benchmark-sacas9
+python src/benchmark_sacas9.py
+
 # stage 5: robustness / denominator-sensitivity analysis (downloads ~80 MB once)
 python run_pipeline.py --robustness
 
@@ -148,6 +205,8 @@ python run_pipeline.py --robustness --skip-gene-corpus
 # offline unit tests (no network)
 python tests/test_core.py
 python tests/test_robustness.py
+python tests/test_nuclease.py
+python tests/test_benchmark.py
 ```
 
 Each stage is also runnable on its own: `python src/fetch_genomes.py --help`, etc.
@@ -167,7 +226,14 @@ contacting NCBI, `--refresh` bypasses the download cache, `-v` enables debug log
 | 3 | `src/conservation.py` | `results/conservation.tsv` |
 | 4 | `src/report.py` | `results/guides_ranked.tsv`, `results/summary.json` |
 | 5 | `src/robustness.py` | `results/robustness_report.md` + supporting TSVs (opt-in, `--robustness`) |
+| 6 | `src/benchmark_sacas9.py` | `results/sacas9_benchmark_report.md` + supporting TSVs (opt-in, `--benchmark-sacas9`) |
 | — | `run_pipeline.py` | `results/run_log.json` |
+
+Outputs are **namespaced by nuclease**. SpCas9 keeps the historical paths
+(`results/guides_ranked.tsv`); any other nuclease writes to `results/<tag>/`
+(`results/sacas9/`, `results/sacas9-nngrrn/`, `results/sacas9-20nt/`), so runs under
+different nucleases never overwrite each other. Stage 6 is nuclease-fixed by
+construction and always writes to `results/`.
 
 **1. Fetch.** Queries NCBI Nucleotide, sorts accessions before applying `--limit` (so
 `--limit 5` is deterministic), downloads FASTA per accession with caching, batching,
@@ -189,8 +255,8 @@ full sorted list of accessions used and the exact package versions. `--query`
 overrides it entirely.
 
 **2. Extract.** Reads the annotated GenBank record for the reference (default
-`NC_001806`, HSV-1 strain 17) and enumerates every SpCas9 site on both strands within
-the target genes. **Gene coordinates are parsed from the annotation — no coordinates
+`NC_001806`, HSV-1 strain 17) and enumerates every site of the selected nuclease on
+both strands within the target genes. **Gene coordinates are parsed from the annotation — no coordinates
 are hardcoded.** Default targets, all essential or high-value antiviral targets:
 
 | Gene | Product |
@@ -253,8 +319,9 @@ corrected denominator.
 | `gene`, `gene_product` | From the reference annotation. `A\|B` if one 23-mer is shared by two genes. |
 | `strand` | Strand the protospacer lies on (`+`/`-`) |
 | `position_in_reference`, `ref_start`, `ref_end` | 1-based inclusive plus-strand coordinates spanning the whole 23-mer |
-| `cut_site_ref` | Predicted blunt cut, 3 bp 5' of the PAM |
-| `protospacer`, `pam`, `target_23mer` | 20 nt / 3 nt / the concatenation actually searched for |
+| `cut_site_ref` | Predicted blunt cut position, reported as `ref_end - pam_length - 2` (plus strand) / `ref_start + pam_length + 1` (minus). For SpCas9 that is `e-5`/`s+4`, exactly as in the original implementation. Note this sits one base inside the canonical blunt cut (which is between protospacer positions 17 and 18, i.e. `e-6`/`e-5`); the original convention was kept deliberately so that SpCas9 output stays reproducible. The column is informational and is not used in ranking, filtering or any analysis in this repository |
+| `protospacer`, `pam`, `target_23mer` | spacer / PAM / the concatenation actually searched for. `target_23mer` keeps its historical name for back-compatibility but its **length is nuclease-dependent**: 23 nt for SpCas9, 26-27 nt for SaCas9 |
+| `nuclease`, `pam_pattern` | provenance columns written by stage 2 (`spcas9`/`NGG`, `sacas9`/`NNGRRT`, ...). Stage 3 reads them back, so conservation can never be scored under a different grammar than the one that enumerated the sites |
 | `gc_content`, `gc_in_range` | GC fraction of the protospacer; within `--gc-min`/`--gc-max` (default 0.35–0.75) |
 | `max_homopolymer_run` | Longest single-base run in the protospacer |
 | `has_polyT` | **`TTTT` or longer in the protospacer.** RNA polymerase III terminates at a run of >=4 T, so a U6/H1-driven sgRNA containing one is transcribed truncated and is non-functional. A hard exclusion, not a soft penalty. |
@@ -267,8 +334,9 @@ corrected denominator.
 
 ## Results actually observed
 
-Full HSV-1 run, 2026-09-07, query as above. **These are the real numbers produced by
-the run; nothing is padded or extrapolated.**
+Full HSV-1 run under the SpCas9 defaults, 2026-09-07, query as above. **These are the
+real numbers produced by the run; nothing is padded or extrapolated.** The same run
+under SaCas9 is [below](#the-same-run-under-sacas9).
 
 * NCBI reported and returned **183** complete HSV-1 genomes (147,898–159,092 bp).
 * **4,777** unique candidate 23-mers across the 7 target genes (RL2 713, UL19 959,
@@ -304,6 +372,38 @@ least:
 Also observed: 119 guides carry a poly-T terminator and 1,366 fall outside the GC
 band, which is why the perfectly-conserved count drops from 833 to 644 after
 filtering.
+
+### The same run under SaCas9
+
+`python run_pipeline.py --nuclease sacas9 --skip-fetch`, same 183 genomes, same 7
+genes, outputs under `results/sacas9/`:
+
+| nuclease / PAM | candidates | perfectly conserved | % | pass all filters |
+|---|---|---|---|---|
+| SpCas9 `NGG` (20 nt) | 4,777 | 833 | 17.4 | 644 |
+| SaCas9 `NNGRRT` (21 nt) | 448 | 67 | 15.0 | 45 |
+| SaCas9 `NNGRRT` (20 nt) | 449 | 69 | 15.4 | 58 |
+| SaCas9 `NNGRRN` (21 nt) | 3,526 | 496 | 14.1 | 338 |
+
+**The headline is the first column, not the third.** Requiring `NNGRRT` costs an
+order of magnitude in candidate sites (448 vs 4,777) while the *fraction* that is
+perfectly conserved barely moves. Anyone designing a SaCas9 therapeutic against
+HSV-1 is choosing from roughly a tenth of the options an SpCas9 design has, which is
+the structural reason a SaCas9 paper can end up with a mediocre guide without doing
+anything wrong procedurally.
+
+Perfect conservation by gene under SaCas9 `NNGRRT` (21 nt), for comparison with the
+SpCas9 table above:
+
+| Gene | guides | perfectly conserved | % |
+|------|--------|---------------------|---|
+| UL19 (VP5) | 77 | 16 | 20.8 |
+| UL52 | 77 | 15 | 19.5 |
+| UL5 | 57 | 11 | 19.3 |
+| RL2 (ICP0) | 46 | 6 | 13.0 |
+| UL29 (ICP8) | 63 | 7 | 11.1 |
+| UL30 (Pol) | 93 | 10 | 10.8 |
+| UL54 (ICP27) | 35 | 2 | 5.7 |
 
 ---
 
@@ -417,6 +517,75 @@ the gene-level corpus, with the per-guide denominator stated.
 
 ---
 
+## SaCas9 head-to-head with Amrani et al. 2024
+
+Stage 6 (`--benchmark-sacas9`, full write-up in
+`results/sacas9_benchmark_report.md`). Amrani et al. 2024
+(*Mol Ther Methods Clin Dev* 32:101303, EBT-104) selected four SaCas9 guides -- two
+in ICP0/RL2, two in ICP27/UL54 -- on a `>70%` conservation criterion against a
+Feb-2022 ViPR CDS snapshot plus an off-target count, and took **ICP0g2 + ICP27g1**
+forward as the clinical pair. Stage 5 scored those four guides with our method and
+found ICP0g2 at 0.847. Stage 6 asks the question that number provokes: *within the
+SaCas9 site space they were actually working in, what else was available?*
+
+The candidate pool is enumerated in their exact grammar -- 20 nt spacer + `NNGRRT`,
+the site definition printed in their Table 1 -- inside the annotated CDS of the same
+two genes. All four published guides are recovered from that pool, which is asserted
+in `tests/test_benchmark.py`; if they were not, every rank below would be
+meaningless.
+
+### Where their guides rank
+
+| guide | gene | rank in gene pool | conservation (n=183) | gene-level corpus | GC | passes filters |
+|---|---|---|---|---|---|---|
+| ICP0g1 | ICP0/RL2 | 12 / 46 | 0.984 | 0.983 | 0.80 | no (GC 0.80, homopolymer 5) |
+| **ICP0g2** (lead) | ICP0/RL2 | **31 / 46** | **0.847** | 0.898 | 0.60 | yes |
+| **ICP27g1** (lead) | ICP27/UL54 | **12 / 35** | **0.978** | 0.991 | 0.60 | yes |
+| ICP27g2 | ICP27/UL54 | 19 / 35 | 0.973 | 0.995 | 0.65 | yes |
+
+### The central result
+
+* **30 of the 46 `NNGRRT` sites in ICP0 are better conserved than ICP0g2.**
+  **12** of those also pass every standard filter (no poly-T terminator,
+  homopolymer run <= 4, GC 0.35-0.75), and **4** are present in all 183 genomes.
+  All 12 lie in both ICP0 repeat copies, so they preserve the three-DSB design that
+  motivates the paper.
+* Their `>70%` threshold admits **69 of the 81** sites across both genes. The
+  criticism is not that they broke their own rule -- all four guides clear it -- but
+  that the rule barely discriminates.
+* **Pairs.** Their lead pair is intact at both sites in **151 / 183 genomes
+  (0.825)** -- *below either guide's own conservation*, because the two guides fail
+  in different isolates. 258 filter-passing pairs beat it and 8 are intact in all
+  183. Keeping ICP27g1 exactly as published and swapping only the ICP0 guide for
+  `RL2_3364+` takes the pair from 0.825 to **0.978** (28 more isolates covered).
+  This joint number is invisible to a per-guide conservation table, which is the
+  form in which their method reports its selection.
+
+### The feasibility check, which does not go the way you would expect
+
+ICP0 is GC-rich and repeat-associated, so the obvious objection is that the
+better-conserved sites are unusable GC-extremes. They are not. The 12 filter-passing
+alternatives span GC 0.50-0.75 with a median local (200 bp) GC of 0.69, against
+**0.84 local GC around ICP0g2 itself** -- a figure that independently corroborates
+Amrani et al.'s own report that the ICP0g2 site could not be amplified or sequenced
+because of ~85% GC. On the one feasibility axis visible in the data, and the one they
+themselves flagged as a problem, the alternatives are *better*, not worse.
+
+### What this does not show
+
+No off-target screening was performed here (`src/offtarget.py` is a stub), and they
+did run BWA + Cas-OFFinder against hg38 with GUIDE-seq validation and selected partly
+on nominated off-target counts. No activity prediction is performed either, and they
+screened six pairwise combinations in Vero cells before choosing. AAV packaging,
+synthesis feasibility and unpublished screening failures are all invisible here. The
+defensible claim is therefore narrow and specific: **on cross-isolate conservation --
+the axis they themselves selected on -- their lead ICP0 guide is beaten by a quarter
+of its own gene's SaCas9 sites, and their lead pair by 258 filter-passing pairs.**
+Whether any of those alternatives is a better *drug* is not settled by this analysis,
+and the report says so at length.
+
+---
+
 ## Limitations
 
 Read these before using any guide from this table.
@@ -479,7 +648,14 @@ Read these before using any guide from this table.
    the form "conserved across thousands of sequences" are not supportable for six of
    the seven genes; see the stage-5 report for the per-gene denominators.
 
-9. **Coverage determination is anchor-based, not alignment-based.** A record is
+9. **The SaCas9 comparison inherits limitation 1.** Stage 6 ranks published guides
+   against alternatives on conservation alone. Amrani et al. selected on
+   conservation *and* a full off-target pipeline *and* measured antiviral activity in
+   cells; two of those three axes are invisible to this repository. A stage-6 rank is
+   an argument about their selection *metric*, not a claim that a better guide
+   exists all things considered.
+
+10. **Coverage determination is anchor-based, not alignment-based.** A record is
    admitted to a guide's denominator only when exact 25-mer anchors bracket the guide
    footprint within one colinear chain. This is deliberately conservative and is
    validated by `tests/test_robustness.py` on synthetic truncations, SNPs, N blocks
@@ -516,6 +692,14 @@ tables `robustness_redundancy.tsv`, `robustness_effective_n.tsv`,
 `data/gene_corpus_manifest.tsv`. Both Entrez queries used to build the gene-level
 corpus are written into the report and the JSON summary.
 
+Stage 6 adds `results/sacas9_benchmark_report.md`,
+`results/sacas9_benchmark_summary.json` (also embedded in `results/run_log.json` when
+the stage runs inside the pipeline), `results/sacas9_benchmark_pool.tsv` (every
+SaCas9 site in RL2 and UL54 with both conservation measures, GC context, filter flags
+and rank) and `results/sacas9_benchmark_pairs.tsv` (all 1,610 ICP0 x ICP27 pairs with
+joint conservation). It runs entirely offline from the caches populated by stages 1
+and 5.
+
 `data/raw/`, `results/` and the run-specific manifests are gitignored: they are
 regenerable, and a stale or smoke-test copy in version control would be misleading.
 Archive `data/manifest.tsv`, `data/gene_corpus_manifest.tsv` and
@@ -534,8 +718,12 @@ src/extract_guides.py    stage 2 - SpCas9 site enumeration from GenBank annotati
 src/conservation.py      stage 3 - alignment-free exact-match conservation scoring
 src/report.py            stage 4 - flags, ranking, guides_ranked.tsv
 src/robustness.py        stage 5 - redundancy, N-sensitivity, denominator sensitivity
+src/benchmark_sacas9.py  stage 6 - SaCas9 head-to-head vs Amrani et al. 2024
+src/nuclease.py          nuclease/PAM model (IUPAC, both strands, scanner anchors)
 src/offtarget.py         STUB - human off-target screening, phase 2
 tests/test_core.py       offline unit tests (no network)
 tests/test_robustness.py offline unit tests for stage 5 (no network)
+tests/test_nuclease.py   PAM model + scanner-equivalence proof for every PAM
+tests/test_benchmark.py  offline unit tests for stage 6 (no network)
 requirements.txt         pinned, installed and tested on CPython 3.14.5
 ```
