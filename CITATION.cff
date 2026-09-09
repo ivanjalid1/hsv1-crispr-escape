@@ -32,7 +32,7 @@ authors:
   - given-names: "Ivan"
     family-names: "Heredia Jalid"
     email: "ivanjalid@gmail.com"
-    affiliation: "Independent Researcher, Córdoba, Argentina"
+    affiliation: "Universidad Católica de Córdoba, Córdoba, Argentina"
     # Full URI form. The CFF schema type-checks this field against
     # https://orcid.org/<16 digits>; the bare identifier would fail validation
     # here, and an invalid file silently removes GitHub's "Cite this repository"
@@ -79,7 +79,7 @@ preferred-citation:
     - given-names: "Ivan"
       family-names: "Heredia Jalid"
       email: "ivanjalid@gmail.com"
-      affiliation: "Independent Researcher, Córdoba, Argentina"
+      affiliation: "Universidad Católica de Córdoba, Córdoba, Argentina"
       orcid: "https://orcid.org/0009-0003-6702-1295"
   year: 2026
   journal: bioRxiv

@@ -34,12 +34,18 @@ will be published under.
 |---|---|
 | Name | `Ivan Heredia Jalid` |
 | Email | `ivanjalid@gmail.com` |
-| Affiliation | `Independent Researcher, Córdoba, Argentina` |
+| Affiliation | `Universidad Católica de Córdoba, Córdoba, Argentina` |
 | ORCID | `0009-0003-6702-1295` |
 
 Two surnames, no hyphen. `Heredia Jalid` is one family name and is recorded as a
 single field everywhere the metadata is structured, so that indexers cannot split it
 and attribute half the work to someone else.
+
+The **affiliation** row above was `Independent Researcher, Córdoba, Argentina` until
+bioRxiv declined the first submission for having no organizational affiliation; it is
+now the institution the author actually studies at. See **Step 6a**. The name, the
+email and the ORCID are unchanged, and the git history was **not** rewritten a second
+time — commits stay `Ivan Heredia Jalid <ivanjalid@gmail.com>`.
 
 ### What was done
 
@@ -125,12 +131,12 @@ re-decided.
 | `CITATION.cff:32` | `given-names` | `Ivan` |
 | `CITATION.cff:33` | `family-names` | `Heredia Jalid` — **one** field, both surnames, no hyphen |
 | `CITATION.cff:34` | `email` | `ivanjalid@gmail.com` |
-| `CITATION.cff:35` | `affiliation` | `Independent Researcher, Córdoba, Argentina` |
+| `CITATION.cff:35` | `affiliation` | `Universidad Católica de Córdoba, Córdoba, Argentina` |
 | `CITATION.cff:79-82` | the same four fields inside `preferred-citation` | as above |
 | `.zenodo.json:7` | `creators[0].name` | `Heredia Jalid, Ivan` — Zenodo's **`Family, Given`** order |
 | `.zenodo.json:8` | `creators[0].affiliation` | as above |
 | `manuscript/manuscript.md:3` | author line | `**Ivan Heredia Jalid**` |
-| `manuscript/manuscript.md:5` | affiliation | `Independent Researcher, Córdoba, Argentina` |
+| `manuscript/manuscript.md:5` | affiliation | `Universidad Católica de Córdoba, Córdoba, Argentina` |
 | `manuscript/manuscript.md:9` | correspondence | `Correspondence: Ivan Heredia Jalid <ivanjalid@gmail.com>` — published deliberately |
 | `manuscript/manuscript.md:384` | Author Contributions | name, affiliation and ORCID |
 | `README.md:387,390` | the two **How to cite** entries | `Ivan Heredia Jalid` |
@@ -484,8 +490,54 @@ Submit `manuscript/manuscript.md` to bioRxiv with the code URL and DOI now prese
 Section 7. Category: Bioinformatics, or Genomics. Declare no competing interests, as
 Section 9 already states.
 
-- [ ] preprint submitted
+- [x] preprint submitted — first attempt, MS ID `BIORXIV/2026/750208`, **declined** (6a)
+- [ ] preprint resubmitted with the organizational affiliation
 - [ ] preprint DOI received: `10.1101/__________`
+
+### 6a. First submission declined — no organizational affiliation — **FIXED**
+
+The first submission, **MS ID `BIORXIV/2026/750208`**, was declined. bioRxiv's stated
+reason, in full:
+
+> bioRxiv requires authors to have an organizational affiliation. It is necessary for
+> submissions to be associated with an organization that provides oversight of research
+> activities so that it can adjudicate any ethical issues/disputes that arise.
+
+Nothing scientific was at issue. `Independent Researcher, Córdoba, Argentina` names no
+organization that could adjudicate anything, and bioRxiv will not accept a submission
+without one. This is a screening policy, not a review comment; there is no appeal that
+does not involve supplying an affiliation.
+
+**The fix.** The author is an active student at Universidad Católica de Córdoba, so the
+institutional affiliation is accurate and was simply missing rather than absent. Every
+occurrence of the old string became:
+
+```
+Universidad Católica de Córdoba, Córdoba, Argentina
+```
+
+in `manuscript/manuscript.md` (the author block and the Author Contributions
+paragraph), `CITATION.cff` (**both** author blocks — top-level and
+`preferred-citation`), `.zenodo.json` (`creators[0].affiliation`),
+`manuscript/build_pdf.py` (the typeset title block, where it is HTML-escaped as
+`Cat&oacute;lica` / `C&oacute;rdoba`), and the tables in this file. The submission PDF
+was then rebuilt from source, and `grep` over the extracted PDF text confirms the new
+affiliation is present and the old one appears nowhere.
+
+**What deliberately did *not* change, and must not be changed later:**
+
+- The author name `Ivan Heredia Jalid`, the ORCID `0009-0003-6702-1295`, and the
+  correspondence address `ivanjalid@gmail.com`.
+- **The git commit identity.** Commits stay
+  `Ivan Heredia Jalid <ivanjalid@gmail.com>`. The commit identity and the paper
+  affiliation are separate things, and the personal address is deliberate — it outlives
+  enrolment. Step 0's history rewrite exists precisely to keep an institutional email
+  out of this repository; **do not reintroduce an institutional email address anywhere**,
+  in any file or in any commit.
+
+- [x] affiliation corrected repository-wide (9 occurrences across 5 files)
+- [x] `manuscript/hsv1-crispr-escape-preprint.pdf` rebuilt and re-verified
+- [ ] resubmitted to bioRxiv
 
 ---
 

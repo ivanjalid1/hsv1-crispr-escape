@@ -584,7 +584,7 @@ def build_html(with_line_numbers: bool) -> str:
 <header class="titleblock">
   <h1>{inline(title)}</h1>
   <p class="author">Ivan Heredia Jalid</p>
-  <p class="meta">Independent Researcher, C&oacute;rdoba, Argentina<br/>
+  <p class="meta">Universidad Cat&oacute;lica de C&oacute;rdoba, C&oacute;rdoba, Argentina<br/>
      ORCID 0009-0003-6702-1295<br/>
      Correspondence: ivanjalid@gmail.com</p>
   <p class="archive">Archived code and data-processing pipeline:
